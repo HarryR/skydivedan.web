@@ -60,7 +60,7 @@ These are the placeholder renderer colors to build from, not an immutable palett
 
 ## Asset workflow
 
-- Save each generated full-resolution draft in `assets/originals/` with a stable, versioned filename (for example, `title-logo-v01.png`, `title-logo-v02.png`). Keep earlier versions so they can be compared and swapped in; do not overwrite a prior draft. GitHub Pages does not publish `assets/originals/`.
+- Save each generated full-resolution draft in `assets/originals/` with a stable, versioned filename (for example, `title-logo-v01.png`, `title-logo-v02.png`). Keep earlier versions so they can be compared and swapped in; do not overwrite a prior draft. The directory is gitignored (local only, large files) and GitHub Pages does not publish it.
 - Shipped (crunched) copies go directly in `assets/` (see [Source vs shipped assets](#source-vs-shipped-assets-file-size)).
 - The first title-logo concept is `assets/originals/title-logo-v01.png`; the game loads `assets/title-logo-v01-256.png`.
 
@@ -82,7 +82,7 @@ Favor transparent PNG assets for illustrated sprites and the logo. Add enough at
 
 The look is **crunchy pixels and an 8-bit aesthetic**, and file size matters, especially on phones. Every asset therefore exists in two forms:
 
-- **Source:** the full-resolution generated draft in `assets/originals/` (for example, `assets/originals/title-logo-v01.png`). Keep it for future edits and re-exports. The game never loads it, and it is not deployed.
+- **Source:** the full-resolution generated draft in `assets/originals/` (for example, `assets/originals/title-logo-v01.png`). Keep it locally for future edits and re-exports. The game never loads it; it is gitignored and not deployed.
 - **Shipped:** a small crunched copy that the game loads, named with its width as a suffix (for example, `title-logo-v01-256.png`). Make it with `python3 tools/crunch.py SRC OUT --width W --colors N`. The script crops to the visible pixels, downscales, applies 1-bit alpha, and reduces to a small undithered palette. It then runs `pngcrush` if installed (it is here), which recompresses losslessly; no separate crushed file is needed. It uses only Python and Pillow, plus the system pngcrush.
 
 Display shipped assets hard-edged: `image-rendering: pixelated` in CSS, and `ctx.imageSmoothingEnabled = false` when drawing sprites on Canvas. Budget about **20 KB per shipped asset** and about **150 KB total**. A source PNG can be over 1 MB, so never reference one from the game.
