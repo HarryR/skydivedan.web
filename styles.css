@@ -161,10 +161,25 @@ body {
   image-rendering: pixelated; /* crunchy low-res asset: keep pixels hard-edged */
 }
 
+/* One-line wordmarks (e.g. PAUSED!) are capped narrower so their letters
+   match the two-line logos instead of towering over them. */
+.title-logo-wide {
+  width: min(100%, 19em);
+}
+
 /* Text fallback, shown only if the logo image fails to load. */
 .title-wrap .title {
   display: block;
   margin: 0;
+}
+
+/* English-only wordmarks: in Vietnamese, show the translated text heading
+   instead (i18n.js sets <html lang>). Specific enough to beat [hidden]. */
+html[lang='vi'] .title-wrap .logo-en-only {
+  display: none !important;
+}
+html[lang='vi'] .title-wrap .logo-en-only ~ .title[hidden] {
+  display: block !important;
 }
 
 h2 {

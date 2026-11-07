@@ -11,13 +11,19 @@ import { createGame } from './game.js';
 const stage = /** @type {HTMLElement} */ (document.getElementById('stage'));
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('view'));
 
-// Keep the semantic title readable if the optional logo asset is unavailable.
-const titleLogo = /** @type {HTMLImageElement | null} */ (document.getElementById('title-logo'));
-const titleFallback = document.getElementById('title-fallback');
-titleLogo?.addEventListener('error', () => {
-  titleLogo.hidden = true;
-  if (titleFallback) titleFallback.hidden = false;
-}, { once: true });
+// Logo images (title, game over) fall back to their text heading if the asset
+// is unavailable: hide the <img> and show the sibling .title text. Also covers
+// an image that already failed before this module ran.
+for (const img of stage.querySelectorAll('img.title-logo')) {
+  const logo = /** @type {HTMLImageElement} */ (img);
+  const useText = () => {
+    logo.hidden = true;
+    const text = /** @type {HTMLElement | null} */ (logo.parentElement?.querySelector('.title') ?? null);
+    if (text) text.hidden = false;
+  };
+  if (logo.complete && logo.naturalWidth === 0) useText();
+  else logo.addEventListener('error', useText, { once: true });
+}
 
 // UI and input are created first; their handlers forward to the game.
 /** @type {Game} */

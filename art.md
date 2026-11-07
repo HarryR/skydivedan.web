@@ -90,6 +90,8 @@ Display shipped assets hard-edged: `image-rendering: pixelated` in CSS, and `ctx
 | Asset | World size | Shipped size (starting point) |
 |---|---|---|
 | Title wordmark | — | **256 px wide, 16 colours** (`title-logo-v01-256.png`, 4.5 KB after pngcrush, from a 1.4 MB source) |
+| Game-over wordmark | — | **256 px wide, 16 colours** (`game-over-logo-v01-256.png`, 4.4 KB, from a 1.3 MB source) |
+| Paused wordmark | — | **256 px wide, 16 colours** (`paused-logo-v01-256.png`, 2.4 KB, from an 883 KB source). English-only, so the Vietnamese UI shows the translated text heading instead (`.logo-en-only`). |
 | Dan base at the collider size | 22 × 34 world units | about 2 px/world unit: ~44 × 68 px; rig limbs need atlas padding |
 | Coin | 22 world-unit diameter | ~24–32 px square |
 

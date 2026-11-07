@@ -33,13 +33,19 @@
       </section>
 
       <section id="paused" class="screen" hidden>
-        <h2 data-i18n="paused">Paused</h2>
+        <h2 class="title-wrap">
+          <img class="title-logo title-logo-wide logo-en-only" src="./assets/paused-logo-v01-256.png" alt="Paused" />
+          <span class="title" data-i18n="paused" hidden>Paused</span>
+        </h2>
         <button id="resume-btn" class="big-btn" data-i18n="resume">Resume</button>
         <button id="restart-btn" class="big-btn secondary" data-i18n="restart">Restart</button>
       </section>
 
       <section id="gameover" class="screen" hidden>
-        <h2 class="title" data-i18n="gameOver">GAME OVER</h2>
+        <h2 class="title-wrap">
+          <img class="title-logo" src="./assets/game-over-logo-v01-256.png" alt="GAME OVER" />
+          <span class="title" data-i18n="gameOver" hidden>GAME OVER</span>
+        </h2>
         <p><span data-i18n="coins">Coins</span>: <b id="final-score">0</b></p>
         <p><span data-i18n="best">Best</span>: <b id="final-best">0</b></p>
         <p id="new-best" class="new-best" data-i18n="newBest" hidden>New best!</p>
