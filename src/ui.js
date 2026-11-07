@@ -115,6 +115,7 @@ export function createUI(root, handlers) {
   showLang();
 
   let lastCoins = -1;
+  let lastBest = -1;
   let lastAlt = -1;
 
   return {
@@ -147,7 +148,10 @@ export function createUI(root, handlers) {
         coinsEl.textContent = String(c);
         lastCoins = c;
       }
-      bestEl.textContent = String(best);
+      if (best !== lastBest) {
+        bestEl.textContent = String(best);
+        lastBest = best;
+      }
       const a = Math.max(0, Math.round(alt / 10) * 10);
       if (a !== lastAlt) {
         altEl.textContent = String(a);

@@ -19,6 +19,7 @@ import { loadDanArt, danArtReady, poseFor, drawDanSprite } from './danart.js';
  * @property {number} splat squash progress 0..1 while splatting, or -1
  * @property {boolean} [hideDan] skip drawing Dan (start screen)
  * @property {boolean} [trail] rainbow sparkle trail is on (record Dan's path)
+ * @property {Record<string, number>} [prof] if given, per-section draw time is added here (ms); see ?prof
  */
 
 /**
@@ -266,7 +267,16 @@ export function createRenderer(canvas) {
    * @param {number} t display game time, s
    * @param {DrawOptions} opts
    */
-  function draw(run, t, { debug, splat, hideDan = false, trail = false }) {
+  function draw(run, t, { debug, splat, hideDan = false, trail = false, prof }) {
+    // Optional per-section timing (profiling only; no cost when prof is absent).
+    let mt = prof ? performance.now() : 0;
+    /** @param {string} name */
+    const mark = (name) => {
+      if (!prof) return;
+      const now = performance.now();
+      prof[name] = (prof[name] || 0) + (now - mt);
+      mt = now;
+    };
     const { dan, cam, world } = run;
     scale = canvas.width / cam.w;
 
@@ -277,6 +287,8 @@ export function createRenderer(canvas) {
     ctx.fillStyle = `rgb(${sky[0]},${sky[1]},${sky[2]})`;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+    mark('sky');
+
     // World transform
     const ox = cam.x - cam.w / 2;
     const oy = cam.y - cam.h / 2;
@@ -285,6 +297,8 @@ export function createRenderer(canvas) {
 
     // Parallax scenery behind everything: stars, mountains, hills and trees.
     drawScenery(ctx, cam, view, t);
+
+    mark('scenery');
 
     // Ground, with grass tufts along its edge
     if (view.y1 > CONFIG.GROUND_Y - 10) {
@@ -295,6 +309,8 @@ export function createRenderer(canvas) {
       drawGrass(ctx, view);
     }
 
+    mark('ground');
+
     // Clouds: procedural ovals/circles (cloudart.js) inside each w × h box;
     // the art fills the box across the bounce band.
     for (const c of world.clouds) {
@@ -304,6 +320,8 @@ export function createRenderer(canvas) {
       if (x > view.x1 || x + c.w < view.x0 || y > view.y1 || y + c.h < view.y0) continue;
       drawCloud(ctx, x, y, c.w, c.h, c.seed);
     }
+
+    mark('clouds');
 
     // Coins, big coins and mines
     const reach = CONFIG.COIN_BIG_RADIUS + 20;
@@ -334,6 +352,8 @@ export function createRenderer(canvas) {
     // DAN_W × DAN_H collider: the soles of both shoes sit exactly on y.
     if (dan.vx > 5) facing = 1;
     else if (dan.vx < -5) facing = -1;
+    mark('coins');
+
     // Rainbow sparkle trail, behind Dan.
     if (trail && splat < 0) sampleTrail(rainbow, dan.x, dan.y, t);
     drawTrail(ctx, rainbow, t);
@@ -354,9 +374,12 @@ export function createRenderer(canvas) {
     else drawDan(dan.x, dan.y, dan.vy, dan.boosting, t);
     if (splat >= 0 && !exploded) drawSplatDrops(ctx, dan.x, dan.y, splatTime(splat), seed);
 
+    mark('dan+fx');
+
     // Coin pickup sparkles, in front of Dan.
     drawPickupSparkles(ctx, world.pickups, t);
 
+    mark('sparkles');
     if (debug) drawDebug(run, t);
   }
 

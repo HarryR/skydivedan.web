@@ -68,6 +68,46 @@ window.addEventListener('resize', layout);
 window.visualViewport?.addEventListener('resize', layout);
 layout();
 
+// ?prof: live per-section draw timings (ms per frame, averaged over ~2 s) in
+// a small overlay, for profiling on real devices.
+/** @type {HTMLPreElement | null} */
+let profOut = null;
+/** @type {Record<string, number>} */
+const prof = {};
+let profFrames = 0;
+let profDraw = 0;
+let profStart = performance.now();
+if (new URLSearchParams(location.search).has('prof')) {
+  profOut = document.createElement('pre');
+  profOut.style.cssText =
+    'position:absolute;left:0.4em;top:2.2em;z-index:20;margin:0;padding:0.3em 0.5em;background:#000b;color:#9f9;font:11px/1.3 monospace;pointer-events:none';
+  stage.appendChild(profOut);
+  game.setProf(prof);
+}
+
+/**
+ * Accumulate one frame's timings and refresh the overlay every ~2 s.
+ * @param {number} steps simulation steps run this frame
+ * @param {number} drawMs time spent in game.render this frame
+ */
+function reportProf(steps, drawMs) {
+  profFrames++;
+  profDraw += drawMs;
+  prof.steps = (prof.steps || 0) + steps;
+  const now = performance.now();
+  if (now - profStart < 2000 || !profOut) return;
+  const fps = (profFrames * 1000) / (now - profStart);
+  const lines = [`${fps.toFixed(0)} fps  draw ${(profDraw / profFrames).toFixed(2)} ms/frame`];
+  for (const [k, v] of Object.entries(prof).sort((a, b) => b[1] - a[1])) {
+    if (k !== 'steps') lines.push(`${k.padEnd(9)} ${(v / profFrames).toFixed(2)} ms`);
+    prof[k] = 0;
+  }
+  profOut.textContent = lines.join('\n');
+  profFrames = 0;
+  profDraw = 0;
+  profStart = now;
+}
+
 const DT = 1 / CONFIG.SIM_HZ;
 /** @type {number | null} */
 let lastFrameMs = null;
@@ -83,9 +123,9 @@ function frame(nowMs) {
   const elapsed = (nowMs - lastFrameMs) / 1000;
   lastFrameMs = nowMs;
 
+  let steps = 0;
   if (game.simulating()) {
     accumulator += elapsed;
-    let steps = 0;
     while (accumulator >= DT && steps < CONFIG.MAX_CATCHUP_STEPS) {
       game.step(DT);
       accumulator -= DT;
@@ -96,7 +136,9 @@ function frame(nowMs) {
     accumulator = 0;
   }
 
+  const d0 = profOut ? performance.now() : 0;
   game.render(accumulator);
+  if (profOut) reportProf(steps, performance.now() - d0);
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);

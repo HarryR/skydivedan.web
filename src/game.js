@@ -32,6 +32,7 @@ export const State = Object.freeze({
  * @property {() => boolean} simulating whether fixed steps should run
  * @property {(dt: number) => void} step advance one fixed step of dt seconds
  * @property {(accumulator: number) => void} render draw; accumulator is the unsimulated remainder, s
+ * @property {(prof: Record<string, number> | null) => void} setProf collect per-section draw times into prof (?prof)
  */
 
 /**
@@ -59,6 +60,8 @@ export function createGame({ input, ui, renderer }) {
   let trailUntil = -Infinity;
   let bestCelebrated = false;
   let hintShown = false;
+  /** @type {Record<string, number> | undefined} */
+  let prof;
 
   resetRun(run, 1);
   ui.show('intro');
@@ -169,6 +172,9 @@ export function createGame({ input, ui, renderer }) {
     toggleDebug() {
       debug = !debug;
     },
+    setProf(p) {
+      prof = p ?? undefined;
+    },
     /**
      * @param {number} w
      * @param {number} h
@@ -213,7 +219,7 @@ export function createGame({ input, ui, renderer }) {
       const splat =
         state === State.SPLAT ? splatTime / CONFIG.SPLAT_S : state === State.GAME_OVER ? 1 : -1;
       const trail = state === State.RUNNING && gameTime < trailUntil;
-      renderer.draw(run, gameTime + accumulator, { debug, splat, hideDan: state === State.INTRO, trail });
+      renderer.draw(run, gameTime + accumulator, { debug, splat, hideDan: state === State.INTRO, trail, prof });
       ui.hud(run.balance, best, altitudeOf(run));
     },
   };
