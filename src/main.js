@@ -35,7 +35,7 @@ const ui = createUI(stage, {
   onPause: () => game.onPause(),
   onResume: () => game.onResume(),
 });
-const input = createInput(stage, ui.fartBtn, {
+const input = createInput(stage, ui.stick, {
   onPauseKey: () => game.togglePause(),
   onDebugKey: () => game.toggleDebug(),
 });

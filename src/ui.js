@@ -16,12 +16,13 @@ import { isMuted, setMuted, unlockAudio } from './audio.js';
 
 /**
  * @typedef {object} UI
- * @property {HTMLButtonElement} fartBtn
+ * @property {HTMLElement} stick the touch joystick
+ * @property {(visible: boolean) => void} stickHint show/fade the joystick hint
  * @property {(name: ScreenName | null) => void} show
  *   show one overlay screen, or null for the in-run view (HUD, pause and fart buttons)
  * @property {(coins: number, best: number, alt: number) => void} hud update HUD values
  * @property {(score: number, best: number, isNewBest: boolean) => void} gameOver fill the game-over screen
- * @property {() => void} hideRunControls hide the pause and fart buttons (e.g. during the splat)
+ * @property {() => void} hideRunControls hide the pause button and joystick (e.g. during the splat)
  */
 
 /** @returns {number} saved best score, or 0 if none/unavailable */
@@ -67,7 +68,8 @@ export function createUI(root, handlers) {
   const bestEl = $('hud-best');
   const altEl = $('hud-alt');
   const pauseBtn = $('pause-btn');
-  const fartBtn = /** @type {HTMLButtonElement} */ ($('fart-btn'));
+  const stick = $('stick');
+  const hint = $('stick-hint');
   const shareQr = createShareQr(/** @type {HTMLButtonElement} */ ($('qr-btn')));
 
   $('begin-btn').addEventListener('click', handlers.onBegin);
@@ -116,7 +118,10 @@ export function createUI(root, handlers) {
   let lastAlt = -1;
 
   return {
-    fartBtn,
+    stick,
+    stickHint(visible) {
+      hint.classList.toggle('gone', !visible);
+    },
     // Show exactly one screen (or none) and the in-run controls when running.
     /** @param {ScreenName | null} name */
     show(name) {
@@ -124,12 +129,12 @@ export function createUI(root, handlers) {
       const inRun = name === null;
       hud.hidden = name === 'intro';
       pauseBtn.hidden = !inRun;
-      fartBtn.hidden = !inRun;
+      stick.hidden = !inRun;
       shareQr.setVisible(!inRun); // start, pause and game-over screens
     },
     hideRunControls() {
       pauseBtn.hidden = true;
-      fartBtn.hidden = true;
+      stick.hidden = true;
     },
     /**
      * @param {number} coins current balance (floored for display)

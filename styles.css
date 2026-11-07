@@ -85,34 +85,106 @@ body {
   border-right: 0.3em solid #fff;
 }
 
-#fart-btn {
+/* Touch joystick, bottom centre. The knob is moved by input.js (translate in
+   CSS px); .boosting / --throttle light it up while farting. */
+.stick {
   position: absolute;
-  bottom: calc(1.25em + env(safe-area-inset-bottom));
+  bottom: calc(0.9em + env(safe-area-inset-bottom));
   left: 50%;
-  width: 4.75em;
-  height: 4.75em;
-  margin-left: -2.375em;
+  width: 7.5em;
+  height: 7.5em;
+  margin-left: -3.75em;
   border-radius: 50%;
-  border: 0.25em solid #fff;
-  background: #8bc34acc;
-  font-size: inherit;
+  background: radial-gradient(circle, #ffffff22 0 55%, #00000044 56%);
+  border: 0.2em solid #ffffffaa;
   touch-action: none;
+  z-index: 4;
 }
 
-#fart-btn::before {
-  content: '💨';
-  font-size: 2.1em;
+.stick-arrow {
+  position: absolute;
+  color: #ffffffcc;
+  font-size: 1.15em;
+  line-height: 1;
+  pointer-events: none;
+  text-shadow: 0 1px 2px #0008;
 }
 
-#fart-btn.held {
-  transform: scale(0.92);
-  background: #689f38;
+.stick-left {
+  left: 0.35em;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
-/* Keyboard players don't need the on-screen button. */
+.stick-right {
+  right: 0.35em;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.stick-up {
+  top: 0.2em;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  font-size: 0.95em;
+}
+
+.stick-knob {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 3em;
+  height: 3em;
+  margin: -1.5em 0 0 -1.5em;
+  border-radius: 50%;
+  background: #ffffffdd;
+  box-shadow: 0 0.15em 0.4em #0007;
+  pointer-events: none;
+}
+
+.stick.held .stick-knob {
+  background: #fff;
+}
+
+.stick.boosting .stick-knob {
+  background: #8bc34a;
+  box-shadow:
+    0 0 calc(0.4em + var(--throttle, 0) * 1.2em) #b5ff6a,
+    0 0.15em 0.4em #0007;
+}
+
+.stick.boosting .stick-up {
+  color: #b5ff6a;
+}
+
+/* First-run hint above the joystick; fades out. */
+.stick-hint {
+  position: absolute;
+  bottom: calc(100% + 0.6em);
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  padding: 0.35em 0.8em;
+  border-radius: 999px;
+  background: #000a;
+  color: #fff;
+  font-size: 0.9em;
+  pointer-events: none;
+  transition: opacity 0.6s;
+}
+
+.stick-hint.gone {
+  opacity: 0;
+}
+
+/* Keyboard/mouse players don't need the on-screen stick (it still works). */
 @media (hover: hover) and (pointer: fine) {
-  #fart-btn {
+  .stick {
     opacity: 0.35;
+  }
+  .stick-hint {
+    display: none;
   }
 }
 

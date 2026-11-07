@@ -147,12 +147,17 @@ export function simulateStep(run, input, dt, t) {
   const gravity = lerp(CONFIG.GRAVITY_LOW, CONFIG.GRAVITY_HIGH, a);
   d.vy += gravity * dt;
 
-  d.boosting = input.boost && run.balance > 0;
+  // Fart throttle 0..1 (joystick push; keyboard is 1): lift scales with it and
+  // coin drain grows faster (quadratic term), so a gentle push is a cheap hover
+  // and full throttle is expensive.
+  const throttle = clamp(input.boost, 0, 1);
+  d.boosting = throttle > 0 && run.balance > 0;
   if (d.boosting) {
     const liftScale = clamp(run.balance / CONFIG.FART_FULL_LIFT_BALANCE, 0, 1);
-    d.vy -= CONFIG.FART_ACCEL * liftScale * dt;
+    d.vy -= CONFIG.FART_ACCEL * liftScale * throttle * dt;
     if (d.vy < -CONFIG.FART_MAX_RISE_SPEED) d.vy = -CONFIG.FART_MAX_RISE_SPEED;
-    run.balance = Math.max(0, run.balance - CONFIG.FART_DRAIN_PER_S * dt);
+    const drain = CONFIG.FART_DRAIN_PER_S * throttle + CONFIG.FART_DRAIN_FULL_EXTRA * throttle * throttle;
+    run.balance = Math.max(0, run.balance - drain * dt);
   }
   if (d.vy > CONFIG.MAX_FALL_SPEED) d.vy = CONFIG.MAX_FALL_SPEED;
 

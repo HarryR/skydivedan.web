@@ -62,7 +62,10 @@ export const CONFIG = {
   // Fart boost. Lift scales with balance up to FART_FULL_LIFT_BALANCE coins,
   // flat above that, so only a nearly empty balance gives weak lift.
   FART_ACCEL: 2300,
+  // Coin drain per second = FART_DRAIN_PER_S·throttle + FART_DRAIN_FULL_EXTRA·throttle²:
+  // a gentle hover stays cheap, full throttle (and keyboard) costs much more.
   FART_DRAIN_PER_S: 4,
+  FART_DRAIN_FULL_EXTRA: 5,
   FART_FULL_LIFT_BALANCE: 3,
   FART_MAX_RISE_SPEED: 480,
 
@@ -152,6 +155,12 @@ export const CONFIG = {
   // fraction of full steer), so reversing direction responds immediately.
   TOUCH_ORIGIN_TRAIL: 1,
   TOUCH_DEADZONE_PX: 4,
+  // Joystick: full deflection at STICK_RANGE of its radius; pushing up past
+  // STICK_FART_THRESHOLD farts, scaling to full throttle at the top.
+  STICK_RANGE: 0.85,
+  STICK_DEADZONE: 0.08,
+  STICK_FART_THRESHOLD: 0.3,
+  STICK_HINT_S: 5, // joystick hint shown at the start of each run
 };
 
 /**

@@ -58,6 +58,7 @@ export function createGame({ input, ui, renderer }) {
   let pickupNext = 0;
   let trailUntil = -Infinity;
   let bestCelebrated = false;
+  let hintShown = false;
 
   resetRun(run, 1);
   ui.show('intro');
@@ -70,6 +71,8 @@ export function createGame({ input, ui, renderer }) {
     pickupNext = 0;
     trailUntil = -Infinity;
     bestCelebrated = false;
+    hintShown = true;
+    ui.stickHint(true);
     input.reset();
     clockReset = true;
     state = State.RUNNING;
@@ -142,6 +145,11 @@ export function createGame({ input, ui, renderer }) {
       trailUntil = Math.max(trailUntil, gameTime + TRAIL_BEST_S);
     }
     setFart(run.dan.boosting);
+    // Fade the joystick hint after a few seconds or once the player farts.
+    if (hintShown && (run.dan.boosting || gameTime > CONFIG.STICK_HINT_S)) {
+      hintShown = false;
+      ui.stickHint(false);
+    }
   }
 
   document.addEventListener('visibilitychange', () => {
