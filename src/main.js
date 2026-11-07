@@ -11,6 +11,14 @@ import { createGame } from './game.js';
 const stage = /** @type {HTMLElement} */ (document.getElementById('stage'));
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('view'));
 
+// Keep the semantic title readable if the optional logo asset is unavailable.
+const titleLogo = /** @type {HTMLImageElement | null} */ (document.getElementById('title-logo'));
+const titleFallback = document.getElementById('title-fallback');
+titleLogo?.addEventListener('error', () => {
+  titleLogo.hidden = true;
+  if (titleFallback) titleFallback.hidden = false;
+}, { once: true });
+
 // UI and input are created first; their handlers forward to the game.
 /** @type {Game} */
 let game;

@@ -139,6 +139,34 @@ body {
   text-transform: uppercase;
 }
 
+/* Title heading: spans the intro screen's content width and keeps the stage's
+   em (not h1's 2em or .title's 3.4em), so the logo scales with the stage like
+   the rest of the UI, never with the browser window. The stage is 40em tall. */
+.title-wrap {
+  align-self: stretch;
+  display: flex;
+  justify-content: center;
+  margin: 0 0 0.3em;
+  font-size: 1em;
+}
+
+/* Full content width on narrow portrait, ~2/3 of the stage on square, and at
+   most ~27% of the stage height. Aspect is preserved by object-fit. */
+.title-logo {
+  display: block;
+  width: min(100%, 26em);
+  height: auto;
+  max-height: 11em;
+  object-fit: contain;
+  image-rendering: pixelated; /* crunchy low-res asset: keep pixels hard-edged */
+}
+
+/* Text fallback, shown only if the logo image fails to load. */
+.title-wrap .title {
+  display: block;
+  margin: 0;
+}
+
 h2 {
   margin: 0 0 0.375em;
   font-size: 2em;
