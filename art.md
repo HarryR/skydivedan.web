@@ -35,12 +35,13 @@ These are the placeholder renderer colors to build from, not an immutable palett
 
 ## Dan
 
-- The current Canvas drawing is a useful procedural cutout and animation prototype. Keep using it while movement and poses are being tuned.
-- For final artwork, the preferred direction is a compact layered sprite rig: backpack, torso, head, arms, hands, legs, and shoes with defined pivots. Continue driving the limbs from gameplay state so falling, rising, boosting, and facing direction remain responsive.
-- Dan's physics anchor is the bottom-centre feet point. Shoe soles should meet this anchor exactly. Draw all parts facing right; the renderer mirrors Dan for left-facing movement. Use overhead lighting so the mirrored version still looks correct.
-- Keep visual sprites separate from physics hitboxes. Replacing the placeholder art should not change Dan's 22 × 34 world-unit collider or anchor point. Limbs can extend beyond the collider.
-- Store rig metadata in a small data file: each part's relative asset path, source rectangle, pivot in source pixels, and source-pixels-per-world-unit scale. Keep transparent padding around limbs so rotations do not clip.
-- Create a consistent character reference before generating individual parts, so clothing, proportions, and color treatment match.
+**Current: a sprite rig from the v01 parts** ([src/danart.js](src/danart.js)), using `dan-body-v01` (head, torso and backpack), `dan-arm-v01`, and `dan-leg-v01`. Each limb image is reused for the front and back limbs; back limbs are drawn darker and behind the body. Every frame, the rig is composed into one small reused offscreen canvas at 3 px per world unit with smoothing off, so rotated limbs and the body share one crunchy pixel grid. That canvas is then drawn into the world and mirrored for facing. Limb angles come from gameplay state, as the procedural Dan did: arms wave forward and up while falling and swing down while rising, and the legs spread slightly when falling. The splat squashes the composed sprite flat onto the ground. The procedural Dan in [src/render.js](src/render.js) remains the fallback until the parts load, and if they fail.
+
+- Shipped parts (`tools/crunch.py`, 3 px/world unit): `dan-body-v01-49.png` (24 colours), `dan-arm-v01-52.png`, and `dan-leg-v01-24.png` (16 colours). About 2 KB in total.
+- **Pivots and sizes** were measured from the tight-cropped v01 sources. They live as constants in `danart.js`: joint fractions per part (body hip and shoulders, arm shoulder, leg hip) and each part's height in world units (body 23.8, arm 8.4, leg 14.4). If a part is regenerated, re-measure that part's pivots and size.
+- The v01 parts were generated at unrelated scales and without pivot data, so the scales and joints were set by eye. If they're regenerated, generate all parts together on one sheet at a shared scale, with marked joints (shoulder ball centre, hip ball centre, sole line).
+- Dan's physics anchor is the bottom-centre feet point. Shoe soles meet this anchor exactly. Draw all parts facing right; the renderer mirrors Dan for left-facing movement.
+- Keep visual sprites separate from physics hitboxes. The art does not change Dan's 22 × 34 world-unit collider or anchor point. Limbs extend beyond the collider.
 
 ## Clouds
 

@@ -23,7 +23,9 @@ from PIL import Image
 
 def crunch(src: str, out: str, width: int, colors: int, alpha_cutoff: int) -> None:
     im = Image.open(src).convert('RGBA')
-    bbox = im.getbbox()
+    # Crop to pixels that survive the 1-bit alpha cut, ignoring faint haze
+    # (generated art often has near-invisible alpha around the subject).
+    bbox = im.getchannel('A').point(lambda v: 255 if v >= alpha_cutoff else 0).getbbox()
     if bbox:
         im = im.crop(bbox)
     height = max(1, round(im.height * width / im.width))

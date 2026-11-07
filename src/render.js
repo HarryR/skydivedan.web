@@ -2,6 +2,9 @@
 import { CONFIG, lerp, clamp } from './config.js';
 import { cloudX, cloudY, bandTop, bandBottom, viewRect, windowRect } from './world.js';
 import { drawCloud } from './cloudart.js';
+import { loadDanArt, danArtReady, poseFor, drawDanSprite } from './danart.js';
+
+/** @typedef {import('./danart.js').DanPose} DanPose */
 
 /** @typedef {import('./world.js').Rect} Rect */
 /** @typedef {import('./simulation.js').Run} Run */
@@ -50,6 +53,32 @@ export function createRenderer(canvas) {
 
   /** 1 = facing right, -1 = left; kept from the last clear horizontal motion */
   let facing = 1;
+
+  // Sprite Dan (danart.js) once its parts load; procedural Dan until then.
+  loadDanArt();
+  /** @type {DanPose} reused every frame */
+  const pose = { armFront: 0, armBack: 0, legFront: 0, legBack: 0 };
+
+  /**
+   * Fart puffs from Dan's backside, drawn behind the sprite.
+   * @param {number} x feet centre
+   * @param {number} y feet
+   * @param {number} t display game time, s
+   */
+  function drawPuffs(x, y, t) {
+    const hipY = y - CONFIG.DAN_H * 0.38;
+    ctx.save();
+    ctx.translate(x, 0);
+    ctx.scale(facing, 1);
+    ctx.fillStyle = 'rgba(160, 200, 90, 0.75)';
+    for (let i = 0; i < 3; i++) {
+      const j = (t * 9 + i * 1.7) % 1;
+      ctx.beginPath();
+      ctx.arc(-6 - j * 6 + Math.sin(t * 20 + i) * 2, hipY + 4 + j * 20, 4 + j * 6, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
 
   /**
    * Dan in the air. Arms flail up while falling and sweep down while rising;
@@ -218,7 +247,11 @@ export function createRenderer(canvas) {
     // DAN_W × DAN_H collider: the soles of both shoes sit exactly on y.
     if (dan.vx > 5) facing = 1;
     else if (dan.vx < -5) facing = -1;
-    if (splat >= 0) drawSplat(dan.x, dan.y, splat);
+    if (danArtReady()) {
+      if (dan.boosting && splat < 0) drawPuffs(dan.x, dan.y, t);
+      poseFor(splat >= 0 ? 0 : dan.vy, t, pose);
+      drawDanSprite(ctx, dan.x, dan.y, facing, pose, splat >= 0 ? Math.min(1, splat * 4) : 0);
+    } else if (splat >= 0) drawSplat(dan.x, dan.y, splat);
     else drawDan(dan.x, dan.y, dan.vy, dan.boosting, t);
 
     if (debug) drawDebug(run, t);
