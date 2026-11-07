@@ -21,7 +21,7 @@ const shapes = new Float64Array(MAX_SHAPES * 4);
  * @param {number} k draw index
  * @returns {number}
  */
-function rand(seed, k) {
+export function rand(seed, k) {
   let t = (seed ^ Math.imul(k + 1, 0x9e3779b1)) >>> 0;
   t = Math.imul(t ^ (t >>> 16), 0x21f0aaad);
   t = Math.imul(t ^ (t >>> 15), 0x735a2d97);

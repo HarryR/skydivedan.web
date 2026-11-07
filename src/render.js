@@ -2,6 +2,7 @@
 import { CONFIG, lerp, clamp } from './config.js';
 import { cloudX, cloudY, bandTop, bandBottom, viewRect, windowRect } from './world.js';
 import { drawCloud } from './cloudart.js';
+import { drawSplatPool, drawSplatDrops, splatSeed, splatTime } from './splat.js';
 import { loadDanArt, danArtReady, poseFor, drawDanSprite } from './danart.js';
 
 /** @typedef {import('./danart.js').DanPose} DanPose */
@@ -247,12 +248,16 @@ export function createRenderer(canvas) {
     // DAN_W × DAN_H collider: the soles of both shoes sit exactly on y.
     if (dan.vx > 5) facing = 1;
     else if (dan.vx < -5) facing = -1;
+    // Ground impact: red splat pool behind Dan, squashed Dan, droplets in front.
+    const seed = splatSeed(dan.x);
+    if (splat >= 0) drawSplatPool(ctx, dan.x, dan.y, splatTime(splat), seed);
     if (danArtReady()) {
       if (dan.boosting && splat < 0) drawPuffs(dan.x, dan.y, t);
       poseFor(splat >= 0 ? 0 : dan.vy, t, pose);
-      drawDanSprite(ctx, dan.x, dan.y, facing, pose, splat >= 0 ? Math.min(1, splat * 4) : 0);
+      drawDanSprite(ctx, dan.x, dan.y, facing, pose, splat >= 0 ? Math.min(1, splatTime(splat) / 0.06) : 0);
     } else if (splat >= 0) drawSplat(dan.x, dan.y, splat);
     else drawDan(dan.x, dan.y, dan.vy, dan.boosting, t);
+    if (splat >= 0) drawSplatDrops(ctx, dan.x, dan.y, splatTime(splat), seed);
 
     if (debug) drawDebug(run, t);
   }
