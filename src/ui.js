@@ -72,15 +72,21 @@ export function createUI(root, handlers) {
   $('restart-btn').addEventListener('click', handlers.onRestart);
   $('again-btn').addEventListener('click', handlers.onRestart);
   pauseBtn.addEventListener('click', handlers.onPause);
-  $('lang-btn').addEventListener('click', () => {
-    setLang(getLang() === 'vi' ? 'en' : 'vi', root);
-    showLang();
-  });
+  // VN / EN toggles (start screen and pause overlay); all stay in sync.
+  const langBtns = root.querySelectorAll('.lang-btn');
+  for (const btn of langBtns) {
+    btn.addEventListener('click', () => {
+      setLang(getLang() === 'vi' ? 'en' : 'vi', root);
+      showLang();
+    });
+  }
 
   function showLang() {
     const l = getLang();
-    $('lang-vn').classList.toggle('active', l === 'vi');
-    $('lang-en').classList.toggle('active', l === 'en');
+    for (const btn of langBtns) {
+      btn.querySelector('.lang-vn')?.classList.toggle('active', l === 'vi');
+      btn.querySelector('.lang-en')?.classList.toggle('active', l === 'en');
+    }
   }
 
   apply(root);
