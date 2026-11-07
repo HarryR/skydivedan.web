@@ -60,8 +60,9 @@ These are the placeholder renderer colors to build from, not an immutable palett
 
 ## Asset workflow
 
-- Save each generated draft in the project `assets/` directory with a stable, versioned filename (for example, `title-logo-v01.png`, `title-logo-v02.png`). Keep earlier versions so they can be compared and swapped in; do not overwrite a prior draft.
-- The first title-logo concept is `assets/title-logo-v01.png`. It is a draft for visual direction, not yet the approved in-game logo.
+- Save each generated full-resolution draft in `assets/originals/` with a stable, versioned filename (for example, `title-logo-v01.png`, `title-logo-v02.png`). Keep earlier versions so they can be compared and swapped in; do not overwrite a prior draft. GitHub Pages does not publish `assets/originals/`.
+- Shipped (crunched) copies go directly in `assets/` (see [Source vs shipped assets](#source-vs-shipped-assets-file-size)).
+- The first title-logo concept is `assets/originals/title-logo-v01.png`; the game loads `assets/title-logo-v01-256.png`.
 
 1. Establish a small style reference and confirm the palette.
 2. Generate the cloud component sheet first; slice it into assets and bake 8–12 variants. Check the bounce band in the game.
@@ -73,7 +74,7 @@ These are the placeholder renderer colors to build from, not an immutable palett
 
 For generated sheets, create each visual family together (all cloud parts on one sheet, all Dan rig parts on one sheet) to reduce style drift between separate generations. Verify that transparent corners have real alpha, not a painted checkerboard. Existing Python PIL 12.x and ImageMagick are available for slicing and export; do not add a new image-processing dependency for this pass.
 
-Use relative paths such as `./assets/clouds.png` for GitHub Pages. Load images asynchronously and keep the current procedural rendering as a fallback until assets load and if they fail. The Pages workflow publishes `assets/` when present.
+Use relative paths such as `./assets/clouds.png` for GitHub Pages. Load images asynchronously and keep the current procedural rendering as a fallback until assets load and if they fail. The Pages workflow publishes `assets/` when present, excluding `assets/originals/`.
 
 Favor transparent PNG assets for illustrated sprites and the logo. Add enough atlas padding for limb pivots without making each small sprite excessively large.
 
@@ -81,14 +82,14 @@ Favor transparent PNG assets for illustrated sprites and the logo. Add enough at
 
 The look is **crunchy pixels and an 8-bit aesthetic**, and file size matters, especially on phones. Every asset therefore exists in two forms:
 
-- **Source:** the full-resolution generated draft (for example, `title-logo-v01.png`). Keep it for future edits and re-exports. The game never loads it.
-- **Shipped:** a small crunched copy that the game loads, named with its width as a suffix (for example, `title-logo-v01-256.png`). Make it with `python3 tools/crunch.py SRC OUT --width W --colors N`. The script crops to the visible pixels, downscales, applies 1-bit alpha, and reduces to a small undithered palette. It uses only Python and Pillow.
+- **Source:** the full-resolution generated draft in `assets/originals/` (for example, `assets/originals/title-logo-v01.png`). Keep it for future edits and re-exports. The game never loads it, and it is not deployed.
+- **Shipped:** a small crunched copy that the game loads, named with its width as a suffix (for example, `title-logo-v01-256.png`). Make it with `python3 tools/crunch.py SRC OUT --width W --colors N`. The script crops to the visible pixels, downscales, applies 1-bit alpha, and reduces to a small undithered palette. It then runs `pngcrush` if installed (it is here), which recompresses losslessly; no separate crushed file is needed. It uses only Python and Pillow, plus the system pngcrush.
 
 Display shipped assets hard-edged: `image-rendering: pixelated` in CSS, and `ctx.imageSmoothingEnabled = false` when drawing sprites on Canvas. Budget about **20 KB per shipped asset** and about **150 KB total**. A source PNG can be over 1 MB, so never reference one from the game.
 
 | Asset | World size | Shipped size (starting point) |
 |---|---|---|
-| Title wordmark | — | **256 px wide, 16 colours** (`title-logo-v01-256.png`, 5.9 KB, from a 1.4 MB source) |
+| Title wordmark | — | **256 px wide, 16 colours** (`title-logo-v01-256.png`, 4.5 KB after pngcrush, from a 1.4 MB source) |
 | Dan base at the collider size | 22 × 34 world units | about 2 px/world unit: ~44 × 68 px; rig limbs need atlas padding |
 | Largest cloud | 150 × 67.5 world units | about 2 px/world unit: ~300 × 135 px per baked variant |
 | Coin | 22 world-unit diameter | ~24–32 px square |

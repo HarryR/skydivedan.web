@@ -26,13 +26,14 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      # Publish only what the game needs, not docs or editor config.
+      # Publish only what the game needs: no docs, editor config, or the
+      # full-resolution source art in assets/originals/ (never loaded).
       - name: Assemble site
         run: |
           mkdir -p _site
           cp index.html styles.css _site/
           cp -r src _site/
-          if [ -d assets ]; then cp -r assets _site/; fi
+          if [ -d assets ]; then cp -r assets _site/ && rm -rf _site/assets/originals; fi
 
       # Requires Settings → Pages → Source: "GitHub Actions" (one-time setup).
       - uses: actions/configure-pages@v6

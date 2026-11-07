@@ -5,12 +5,18 @@ The output is cropped to its visible pixels, downscaled to WIDTH, and given
 1-bit alpha plus an N-colour palette with no dithering. In CSS, display it with
 `image-rendering: pixelated` so it stays crisp when scaled up.
 
-Uses only Python + Pillow (already installed); no npm / Node tooling.
+If `pngcrush` is installed, the output is then crushed in place (lossless,
+pixels identical, metadata stripped), typically saving another ~25%.
+
+Uses only Python + Pillow, plus the optional system pngcrush; no npm / Node tooling.
 
     python3 tools/crunch.py SRC.png OUT.png --width 256 --colors 16
 """
 import argparse
 import os
+import shutil
+import subprocess
+import tempfile
 
 from PIL import Image
 
@@ -25,8 +31,29 @@ def crunch(src: str, out: str, width: int, colors: int, alpha_cutoff: int) -> No
     im.putalpha(im.getchannel('A').point(lambda v: 255 if v >= alpha_cutoff else 0))
     q = im.quantize(colors=colors, method=Image.FASTOCTREE, dither=Image.NONE)
     q.save(out, optimize=True)
+    crushed = crush(out)
     print(f'{src} -> {out}: {width}x{height}, {colors} colours, '
-          f'{os.path.getsize(src) / 1024:.0f} KB -> {os.path.getsize(out) / 1024:.1f} KB')
+          f'{os.path.getsize(src) / 1024:.0f} KB -> {os.path.getsize(out) / 1024:.1f} KB'
+          f'{" (pngcrushed)" if crushed else ""}')
+
+
+def crush(path: str) -> bool:
+    """Losslessly recompress `path` with pngcrush if available; keep whichever is smaller."""
+    exe = shutil.which('pngcrush')
+    if not exe:
+        return False
+    fd, tmp = tempfile.mkstemp(suffix='.png', dir=os.path.dirname(os.path.abspath(path)))
+    os.close(fd)
+    try:
+        subprocess.run([exe, '-q', '-brute', '-reduce', '-rem', 'alla', path, tmp],
+                       check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        if 0 < os.path.getsize(tmp) < os.path.getsize(path):
+            os.replace(tmp, path)
+            return True
+        return False
+    finally:
+        if os.path.exists(tmp):
+            os.remove(tmp)
 
 
 if __name__ == '__main__':
