@@ -21,6 +21,7 @@ const STRINGS = {
     newBest: 'New best!',
     playAgain: 'Play again',
     fart: 'Fart boost',
+    share: 'Show QR code to share this game',
   },
   vi: {
     begin: 'Bắt đầu',
@@ -37,6 +38,7 @@ const STRINGS = {
     newBest: 'Kỷ lục mới!',
     playAgain: 'Chơi lại',
     fart: 'Xì hơi',
+    share: 'Hiện mã QR để chia sẻ trò chơi',
   },
 };
 

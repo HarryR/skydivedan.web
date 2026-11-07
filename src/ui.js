@@ -1,6 +1,7 @@
 // DOM screens, HUD, and the locally saved best score.
 import { CONFIG } from './config.js';
 import { apply, getLang, setLang } from './i18n.js';
+import { createShareQr } from './qr.js';
 
 /** @typedef {'intro' | 'paused' | 'gameover'} ScreenName */
 
@@ -66,6 +67,7 @@ export function createUI(root, handlers) {
   const altEl = $('hud-alt');
   const pauseBtn = $('pause-btn');
   const fartBtn = /** @type {HTMLButtonElement} */ ($('fart-btn'));
+  const shareQr = createShareQr(/** @type {HTMLButtonElement} */ ($('qr-btn')));
 
   $('begin-btn').addEventListener('click', handlers.onBegin);
   $('resume-btn').addEventListener('click', handlers.onResume);
@@ -105,6 +107,7 @@ export function createUI(root, handlers) {
       hud.hidden = name === 'intro';
       pauseBtn.hidden = !inRun;
       fartBtn.hidden = !inRun;
+      shareQr.setVisible(!inRun); // start, pause and game-over screens
     },
     hideRunControls() {
       pauseBtn.hidden = true;
