@@ -81,10 +81,10 @@ export function createInput(surface, stick, { onPauseKey, onDebugKey }) {
   function recompute() {
     let keySteer = 0;
     for (const k of keys) {
-      if (LEFT.has(k)) keySteer -= 1;
-      else if (RIGHT.has(k)) keySteer += 1;
+      if (LEFT.has(k)) keySteer -= CONFIG.KEY_STEER;
+      else if (RIGHT.has(k)) keySteer += CONFIG.KEY_STEER;
     }
-    keySteer = clamp(keySteer, -1, 1);
+    keySteer = clamp(keySteer, -CONFIG.KEY_STEER, CONFIG.KEY_STEER);
 
     let touchSteer = 0;
     let stickBoost = 0;

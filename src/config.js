@@ -56,7 +56,8 @@ export const CONFIG = {
   STEER_ACCEL: 1600,
   STEER_FRICTION: 1100,
   STEER_REVERSE_BOOST: 2.2, // accel multiplier when steering against current motion
-  MAX_SPEED_X: 260,
+  MAX_SPEED_X: 312, // at full joystick/swipe deflection; steer sets a target speed
+  KEY_STEER: 0.8, // arrow keys / A D steer at 80% of MAX_SPEED_X
 
   // Vertical motion as a function of altitude fraction a in [0, 1]
   // (0 = bottom of cloud field, 1 = top). Higher up: lower gravity, stronger
