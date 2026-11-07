@@ -23,7 +23,7 @@ import { CONFIG, clamp } from './config.js';
 /**
  * A held pointer. Steering uses the offset from where it went down.
  * @typedef {object} PointerHold
- * @property {number} startX clientX at pointerdown, CSS px
+ * @property {number} startX joystick origin, CSS px: clientX at pointerdown, then dragged along to stay within full steer of the finger
  * @property {number} x latest clientX, CSS px
  * @property {boolean} boost began on the fart button
  */
@@ -60,7 +60,12 @@ export function createInput(surface, fartButton, { onPauseKey, onDebugKey }) {
     let touchSteer = 0;
     let touchBoost = false;
     const p = steerPointer !== null ? pointers.get(steerPointer) : undefined;
-    if (p) touchSteer = clamp((p.x - p.startX) / CONFIG.TOUCH_FULL_STEER_PX, -1, 1);
+    if (p) {
+      const off = p.x - p.startX;
+      const dz = CONFIG.TOUCH_DEADZONE_PX;
+      const live = Math.abs(off) <= dz ? 0 : off - Math.sign(off) * dz;
+      touchSteer = clamp(live / (CONFIG.TOUCH_FULL_STEER_PX - dz), -1, 1);
+    }
     for (const q of pointers.values()) if (q.boost) touchBoost = true;
 
     let keyBoost = false;
@@ -108,6 +113,11 @@ export function createInput(surface, fartButton, { onPauseKey, onDebugKey }) {
     const p = pointers.get(e.pointerId);
     if (!p) return;
     p.x = e.clientX;
+    // Drag the joystick origin along behind the finger: it never trails more
+    // than full steer, so turning back the other way responds at once.
+    const maxOff = CONFIG.TOUCH_FULL_STEER_PX * CONFIG.TOUCH_ORIGIN_TRAIL;
+    if (p.x - p.startX > maxOff) p.startX = p.x - maxOff;
+    else if (p.startX - p.x > maxOff) p.startX = p.x + maxOff;
     recompute();
   });
 

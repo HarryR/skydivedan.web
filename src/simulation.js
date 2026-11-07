@@ -102,7 +102,9 @@ export function simulateStep(run, input, dt, t) {
 
   const steer = input.steer;
   if (steer !== 0) {
-    d.vx += steer * CONFIG.STEER_ACCEL * dt;
+    // Steering against current motion brakes harder, so turns feel snappy.
+    const reversing = steer * d.vx < 0;
+    d.vx += steer * CONFIG.STEER_ACCEL * (reversing ? CONFIG.STEER_REVERSE_BOOST : 1) * dt;
   } else {
     const f = CONFIG.STEER_FRICTION * dt;
     d.vx = Math.abs(d.vx) <= f ? 0 : d.vx - Math.sign(d.vx) * f;

@@ -43,6 +43,7 @@ export const CONFIG = {
   // Horizontal steering (units/s and units/s^2).
   STEER_ACCEL: 1600,
   STEER_FRICTION: 1100,
+  STEER_REVERSE_BOOST: 2.2, // accel multiplier when steering against current motion
   MAX_SPEED_X: 260,
 
   // Vertical motion as a function of altitude fraction a in [0, 1]
@@ -122,7 +123,11 @@ export const CONFIG = {
   LANG_KEY: 'skydivedan.lang.v1',
 
   // Touch steering: full steer at this horizontal offset in CSS px.
-  TOUCH_FULL_STEER_PX: 40,
+  TOUCH_FULL_STEER_PX: 56,
+  // Floating-joystick origin trails the finger at most this far (as a
+  // fraction of full steer), so reversing direction responds immediately.
+  TOUCH_ORIGIN_TRAIL: 1,
+  TOUCH_DEADZONE_PX: 4,
 };
 
 /**
