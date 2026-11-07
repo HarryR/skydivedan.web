@@ -89,7 +89,7 @@ The game has a visible pause control and pause state. The authoritative simulati
 
 - Show an introduction screen before each run with a large arcade-style *Sky Dive Dan* title, a short explanation of the controls, and a **Begin Game** button.
 - Detect the browser's preferred language and show Vietnamese or English accordingly. Include a visible **VN / EN** toggle on the start screen so players can switch languages themselves.
-- The visual direction is simple, colorful, cartoonish, and a little dreamy: early-2000s Flash game clarity with hints of 1990s Mega Drive character. Favor readable shapes and expressive animation over detailed art.
+- The visual direction and asset approach are documented in [art.md](art.md): simple, colorful, cartoonish, and a little dreamy, with early-2000s Flash clarity and hints of 1990s Mega Drive character.
 - The plane entry and lunch-instead-of-parachute reveal happen once at the beginning of a run. The fall, splat, and **GAME OVER** are the closing gag when the run ends.
 
 ## First playable scope
