@@ -20,7 +20,7 @@ export const CONFIG = {
   VIEW_H_MAX: 900,
   // Game zoom: everything in the world draws this much bigger (the camera
   // shows 1/VIEW_ZOOM as much world). Physics and UI are unaffected.
-  VIEW_ZOOM: 1.5,
+  VIEW_ZOOM: 1.0,
   // Canvas backing-store caps (performance): devicePixelRatio and the long
   // side in device pixels.
   MAX_DPR: 2,
@@ -100,12 +100,12 @@ export const CONFIG = {
   CLOUD_BAND_BOTTOM: 0.8,
 
   // Coins.
-  COIN_POOL: 24,
+  COIN_POOL: 40,
   COIN_RADIUS: 11,
-  COIN_TARGET_LOW: 9,
-  COIN_TARGET_HIGH: 3,
-  COIN_RHO_LOW: 1.6, // spawn events per second while below target
-  COIN_RHO_HIGH: 0.4,
+  COIN_TARGET_LOW: 18,
+  COIN_TARGET_HIGH: 7,
+  COIN_RHO_LOW: 3, // spawn events per second while below target
+  COIN_RHO_HIGH: 1,
   COIN_SPAWN_RANGE: 420, // max distance from Dan
   COIN_MIN_DIST: 90, // never spawn on top of Dan
   COIN_SPARKLE_S: 0.35,
