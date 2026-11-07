@@ -131,16 +131,19 @@ The exact order of boost, gravity, and bounce affects the feel. Keep it explicit
 
 ## Coin availability and randomized spawning
 
-Coins are independent world pickups, not children of clouds. Their positions are chosen in the active world region, so the player steers along moving cloud routes to reach them. Unlike clouds, coins may deliberately spawn inside the camera viewport; show a brief sparkle so the appearance reads clearly. Never spawn a coin directly overlapping Dan, which would turn it into a free instant pickup. Clouds retain the strict off-screen replacement rule above.
+Coins are independent world pickups, not children of clouds. Like clouds, they are kept at a **target density over the whole simulation window**, not clustered around Dan, so areas he moves into already have coins at the right density. Coins never spawn inside the camera viewport (plus a small margin), and never on top of Dan.
 
 Use two separate height-dependent tuning values:
 
-- `coinTarget(height)`: the desired number of coins available in the active world. This is higher near the ground and lower at altitude.
-- `rho_coin(height)`: the spawn-event rate, in coins per second, used while the active coin count is below that target.
+- `coinTarget(height)`: the desired number of coins in the simulation window, scaled by window area like the cloud target. This is higher near the ground and lower at altitude.
+- `rho_coin(height)`: the rate, in coins per second, at which collected coins are allowed to respawn.
 
-The target bounds availability; the rate controls how long the player waits for replenishment after collecting coins. Do not immediately refill every pickup. A randomized interval can be sampled from an exponential distribution with mean `1 / rho_coin`. For a rate that changes as Dan moves, accumulate spawn hazard `rho_coin(height) * dt` and spawn when it crosses a newly sampled exponential threshold. Clamp spawning to the target and the fixed coin-pool capacity.
+Coins are retired and replaced in two different ways:
 
-The spawner runs once per simulation step, not once per rendered frame. Use the run's seeded random generator for reproducible timing and placement if desired. Keep candidate positions within the active world and cloud altitude bounds; tune how far from Dan a coin may appear so pickups feel discoverable but still require steering.
+- **Leaving the window** (Dan moved away): retire the coin and refill toward the target immediately, off-screen, a few per step.
+- **Collected:** the replacement waits. Each pickup adds one unit of "coin debt", and the spawner fills only up to `target - debt`. A hazard process pays the debt back one coin at a time: accumulate `rho_coin(height) * dt` and repay one when it crosses a newly sampled exponential threshold, which gives a randomized interval with mean `1 / rho_coin`. Repaid coins also spawn off-screen. Clamp debt to the target, and clamp spawning to the target and the coin-pool capacity.
+
+A new run fills the window to the target, away from Dan. The spawner runs once per simulation step, not once per rendered frame, using the run's seeded random generator. Positions stay within the active window and the cloud altitude band.
 
 ## Hitboxes and collision checks
 

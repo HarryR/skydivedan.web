@@ -66,6 +66,7 @@ import { CONFIG, lerp, altFrac } from './config.js';
  * @property {Rng} rng run-seeded generator for clouds and coins
  * @property {number} coinHazard accumulated rho·dt since the last coin spawn
  * @property {number} coinThreshold Exp(1)-distributed hazard needed for the next spawn
+ * @property {number} coinDebt collected coins not yet allowed to respawn (paid back by the hazard timer)
  * @property {Pickup[]} pickups fixed ring buffer of recent pickups (CONFIG.PICKUP_FX_POOL)
  * @property {number} pickupNext next ring-buffer slot to overwrite
  * @property {Rect} view scratch: camera viewport, refreshed each step
@@ -160,6 +161,7 @@ export function createWorld() {
     rng: makeRng(1),
     coinHazard: 0,
     coinThreshold: 1,
+    coinDebt: 0,
     pickups: Array.from({ length: CONFIG.PICKUP_FX_POOL }, () => ({ x: 0, y: 0, t: -Infinity })),
     pickupNext: 0,
     view: { x0: 0, y0: 0, x1: 0, y1: 0 },
@@ -300,6 +302,7 @@ export function resetWorld(world, seed, cam, dan) {
   for (const p of world.pickups) p.t = -Infinity;
   world.coinHazard = 0;
   world.coinThreshold = -Math.log(1 - world.rng());
+  world.coinDebt = 0;
 
   windowRect(cam, world.win);
   viewRect(cam, world.view);
@@ -309,6 +312,11 @@ export function resetWorld(world, seed, cam, dan) {
   for (const c of world.clouds) {
     if (world.cloudCount >= target) break;
     spawnCloud(world, c, 0, dan.x, false, avoid);
+  }
+  // Coins at their target density across the whole window (not near Dan).
+  const coins = coinTarget(CONFIG.GROUND_Y - dan.y, areaScale(cam));
+  for (let n = 0; n < CONFIG.COIN_POOL && world.coinCount < coins; n++) {
+    if (!spawnCoin(world, -1, dan, false)) break;
   }
 }
 
@@ -368,13 +376,18 @@ export function recordPickup(world, x, y, t) {
 }
 
 /**
- * Place one coin near Dan, inside the window and cloud band, but never on him.
- * @param {World} world
+ * Place one coin somewhere in the simulation window within the cloud band.
+ * With `offscreenOnly`, it must be outside the camera viewport (so coins never
+ * pop into view; new areas are already populated as the window moves).
+ * Never on top of Dan.
+ * @param {World} world uses world.win / world.view (refreshed by updateClouds)
  * @param {number} t game time, s
  * @param {{ x: number, y: number }} dan Dan's feet position
+ * @param {boolean} offscreenOnly
+ * @returns {boolean} whether a coin was placed
  */
-function spawnCoin(world, t, dan) {
-  const { rng, win } = world;
+function spawnCoin(world, t, dan, offscreenOnly) {
+  const { rng, win, view } = world;
   /** @type {Coin | null} */
   let slot = null;
   for (const k of world.coins) {
@@ -383,15 +396,18 @@ function spawnCoin(world, t, dan) {
       break;
     }
   }
-  if (!slot) return;
+  if (!slot) return false;
 
-  const r = CONFIG.COIN_SPAWN_RANGE;
+  const r = CONFIG.COIN_RADIUS;
+  const m = CONFIG.CLOUD_MIN_OFFSCREEN;
   const yLo = Math.max(win.y0, cloudBandTop);
   const yHi = Math.min(win.y1, cloudBandBottom);
+  if (yHi <= yLo) return false;
   const danCy = dan.y - CONFIG.DAN_H / 2;
-  for (let tries = 0; tries < 6; tries++) {
-    const x = dan.x + range(rng, -r, r);
-    const y = Math.max(yLo, Math.min(yHi, danCy + range(rng, -r, r)));
+  for (let tries = 0; tries < 8; tries++) {
+    const x = range(rng, win.x0 + r, win.x1 - r);
+    const y = range(rng, yLo, yHi);
+    if (offscreenOnly && overlaps(x - r - m, y - r - m, x + r + m, y + r + m, view)) continue;
     const dx = x - dan.x;
     const dy = y - danCy;
     if (dx * dx + dy * dy < CONFIG.COIN_MIN_DIST * CONFIG.COIN_MIN_DIST) continue;
@@ -400,14 +416,28 @@ function spawnCoin(world, t, dan) {
     slot.y = y;
     slot.t0 = t;
     world.coinCount++;
-    return;
+    return true;
   }
+  return false;
 }
 
 /**
- * Retire coins outside the window, then run the hazard-based spawn process:
- * accumulate rho(alt)·dt while below target and spawn when it crosses an
- * exponentially distributed threshold. Call after updateClouds (uses world.win).
+ * A coin was collected: its replacement waits for the randomized respawn
+ * timer instead of appearing immediately.
+ * @param {World} world
+ */
+export function coinCollected(world) {
+  world.coinDebt++;
+}
+
+/**
+ * Keep coins at a target density over the whole simulation window, like
+ * clouds, so areas Dan moves into already have coins:
+ * - coins that leave the window are retired and replaced at once, off-screen;
+ * - collected coins are replaced only after a randomized wait: each pickup adds
+ *   one "debt", and the hazard process (rate rho(alt)) pays it back one coin
+ *   at a time. Replacements also spawn off-screen.
+ * Call after updateClouds (uses world.win / world.view).
  * @param {World} world
  * @param {number} t game time at the end of this step, s
  * @param {number} dt step length, s
@@ -424,11 +454,32 @@ export function updateCoins(world, t, dt, cam, dan, alt) {
     }
   }
   const scale = areaScale(cam);
-  if (world.coinCount >= coinTarget(alt, scale)) return;
-  world.coinHazard += coinRho(alt, scale) * dt;
-  if (world.coinHazard >= world.coinThreshold) {
-    world.coinHazard = 0;
-    world.coinThreshold = -Math.log(1 - world.rng());
-    spawnCoin(world, t, dan);
+  const target = coinTarget(alt, scale);
+  if (world.coinDebt > target) world.coinDebt = target;
+
+  // Pay back pickup debt on the randomized timer.
+  if (world.coinDebt > 0) {
+    world.coinHazard += coinRho(alt, scale) * dt;
+    if (world.coinHazard >= world.coinThreshold) {
+      world.coinHazard = 0;
+      world.coinThreshold = -Math.log(1 - world.rng());
+      world.coinDebt--;
+    }
+  }
+
+  // Fill up to target minus outstanding debt, off-screen, a few per step.
+  const want = target - world.coinDebt;
+  for (let n = 0; n < 3 && world.coinCount < want; n++) {
+    if (!spawnCoin(world, t, dan, true)) break;
+  }
+  // Too many (target dropped, e.g. climbing): retire one off-screen coin per step.
+  if (world.coinCount > target) {
+    for (const k of world.coins) {
+      if (k.active && !overlaps(k.x, k.y, k.x, k.y, world.view)) {
+        k.active = false;
+        world.coinCount--;
+        break;
+      }
+    }
   }
 }
