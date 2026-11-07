@@ -17,7 +17,6 @@ import { isMuted, setMuted, unlockAudio } from './audio.js';
 /**
  * @typedef {object} UI
  * @property {HTMLElement} stick the touch joystick
- * @property {(visible: boolean) => void} stickHint show/fade the joystick hint
  * @property {(name: ScreenName | null) => void} show
  *   show one overlay screen, or null for the in-run view (HUD, pause and fart buttons)
  * @property {(coins: number, best: number, alt: number) => void} hud update HUD values
@@ -69,7 +68,6 @@ export function createUI(root, handlers) {
   const altEl = $('hud-alt');
   const pauseBtn = $('pause-btn');
   const stick = $('stick');
-  const hint = $('stick-hint');
   const shareQr = createShareQr(/** @type {HTMLButtonElement} */ ($('qr-btn')));
 
   $('begin-btn').addEventListener('click', handlers.onBegin);
@@ -120,9 +118,6 @@ export function createUI(root, handlers) {
 
   return {
     stick,
-    stickHint(visible) {
-      hint.classList.toggle('gone', !visible);
-    },
     // Show exactly one screen (or none) and the in-run controls when running.
     /** @param {ScreenName | null} name */
     show(name) {

@@ -47,6 +47,17 @@ if (new URLSearchParams(location.search).has('debug')) game.toggleDebug();
 for (const type of ['selectstart', 'contextmenu', 'dragstart']) {
   document.addEventListener(type, (e) => e.preventDefault());
 }
+// iOS Safari only suppresses long-press selection / magnifier when touchstart
+// itself is cancelled (CSS and pointer events aren't enough). Leave buttons
+// and links alone so their taps still produce clicks.
+stage.addEventListener(
+  'touchstart',
+  (e) => {
+    const target = /** @type {Element} */ (e.target);
+    if (!target.closest('button, a')) e.preventDefault();
+  },
+  { passive: false },
+);
 
 // Browsers only allow audio after a user gesture; unlock on the first one.
 window.addEventListener('pointerdown', unlockAudio, { passive: true });

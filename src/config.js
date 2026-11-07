@@ -170,7 +170,6 @@ export const CONFIG = {
   STICK_RANGE: 0.85,
   STICK_DEADZONE: 0.08,
   STICK_FART_THRESHOLD: 0.3,
-  STICK_HINT_S: 5, // joystick hint shown at the start of each run
 };
 
 /**
