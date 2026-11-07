@@ -21,6 +21,10 @@ export const CONFIG = {
   // Game zoom: everything in the world draws this much bigger (the camera
   // shows 1/VIEW_ZOOM as much world). Physics and UI are unaffected.
   VIEW_ZOOM: 1.0,
+  // Never show less than this much world horizontally: on narrow portrait
+  // phones the view grows taller instead, so everything draws a bit smaller
+  // and the player can see neighbouring clouds.
+  VIEW_W_MIN: 480,
   // Canvas backing-store caps (performance): devicePixelRatio and the long
   // side in device pixels.
   MAX_DPR: 2,
@@ -127,6 +131,14 @@ export const CONFIG = {
   // Camera.
   CAMERA_FOLLOW: 8, // 1/s, exponential smoothing rate
   CAMERA_LEAD_Y: 60, // look a little below Dan
+  // Look-ahead: the camera leads in the direction Dan is moving, by velocity ×
+  // these times (s), capped as a fraction of the view. The lead itself is
+  // smoothed more slowly than the camera so bounces don't swing the view.
+  CAMERA_LOOK_X_S: 0.35,
+  CAMERA_LOOK_DOWN_S: 0.28, // falling: show more below
+  CAMERA_LOOK_UP_S: 0.15, // rising: show a little more above
+  CAMERA_LOOK_MAX: 0.28, // fraction of view width/height
+  CAMERA_LOOK_FOLLOW: 2.5, // 1/s, smoothing rate of the lead
 
   // Game over.
   SPLAT_S: 1.2,
@@ -182,7 +194,9 @@ export function layoutFor(winW, winH) {
     cssH = cssW / aspect;
   }
   const grown = CONFIG.VIEW_REF_H * Math.pow(cssH / CONFIG.VIEW_REF_CSS_H, CONFIG.VIEW_GROWTH);
-  const viewH = clamp(grown, CONFIG.VIEW_H_MIN, CONFIG.VIEW_H_MAX) / CONFIG.VIEW_ZOOM;
+  let viewH = clamp(grown, CONFIG.VIEW_H_MIN, CONFIG.VIEW_H_MAX) / CONFIG.VIEW_ZOOM;
+  // Narrow screens: widen to VIEW_W_MIN by showing more height too.
+  if (viewH * aspect < CONFIG.VIEW_W_MIN) viewH = CONFIG.VIEW_W_MIN / aspect;
   return { cssW, cssH, viewW: viewH * aspect, viewH };
 }
 

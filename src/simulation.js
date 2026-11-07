@@ -53,6 +53,7 @@ import {
  * @property {boolean} exploded touched a mine during the last step (run ends)
  * @property {StepEvents} events what happened during the last step
  * @property {number} candidates debug: clouds that passed the cheap reject last step
+ * @property {{ x: number, y: number }} look smoothed camera look-ahead offset, world units
  */
 
 /** @returns {Run} */
@@ -66,6 +67,7 @@ export function createRun() {
     exploded: false,
     events: { coins: 0, bigCoins: 0, bounces: 0 },
     candidates: 0,
+    look: { x: 0, y: 0 },
   };
 }
 
@@ -86,6 +88,8 @@ export function resetRun(run, seed) {
   d.landedAt = -1;
   run.cam.x = d.x;
   run.cam.y = d.y + CONFIG.CAMERA_LEAD_Y;
+  run.look.x = 0;
+  run.look.y = 0;
   run.balance = 0;
   run.landed = false;
   run.exploded = false;
@@ -247,11 +251,19 @@ export function simulateStep(run, input, dt, t) {
     run.landed = true;
   }
 
-  // 9. Camera follows with exponential smoothing; stops descending once the
-  // ground sits about 70% of the way down the screen.
+  // 9. Camera follows with exponential smoothing, leading in the direction
+  // Dan is moving (smoothed look-ahead); stops descending once the ground
+  // sits about 70% of the way down the screen.
+  const maxX = run.cam.w * CONFIG.CAMERA_LOOK_MAX;
+  const maxY = run.cam.h * CONFIG.CAMERA_LOOK_MAX;
+  const wantX = clamp(d.vx * CONFIG.CAMERA_LOOK_X_S, -maxX, maxX);
+  const wantY = clamp(d.vy * (d.vy > 0 ? CONFIG.CAMERA_LOOK_DOWN_S : CONFIG.CAMERA_LOOK_UP_S), -maxY, maxY);
+  const kl = 1 - Math.exp(-CONFIG.CAMERA_LOOK_FOLLOW * dt);
+  run.look.x += (wantX - run.look.x) * kl;
+  run.look.y += (wantY - run.look.y) * kl;
   const k = 1 - Math.exp(-CONFIG.CAMERA_FOLLOW * dt);
-  run.cam.x += (d.x - run.cam.x) * k;
-  run.cam.y += (d.y + CONFIG.CAMERA_LEAD_Y - run.cam.y) * k;
+  run.cam.x += (d.x + run.look.x - run.cam.x) * k;
+  run.cam.y += (d.y + CONFIG.CAMERA_LEAD_Y + run.look.y - run.cam.y) * k;
   const maxCamY = CONFIG.GROUND_Y - run.cam.h * 0.2;
   if (run.cam.y > maxCamY) run.cam.y = maxCamY;
 }
