@@ -4,6 +4,7 @@ import { cloudX, cloudY, bandTop, bandBottom, viewRect, windowRect } from './wor
 import { drawCloud } from './cloudart.js';
 import { drawSplatPool, drawSplatDrops, splatSeed, splatTime } from './splat.js';
 import { drawPickupSparkles } from './sparkle.js';
+import { drawScenery, drawGrass } from './scenery.js';
 import { loadDanArt, danArtReady, poseFor, drawDanSprite } from './danart.js';
 
 /** @typedef {import('./danart.js').DanPose} DanPose */
@@ -205,12 +206,16 @@ export function createRenderer(canvas) {
     ctx.setTransform(scale, 0, 0, scale, -ox * scale, -oy * scale);
     const view = viewRect(cam, scratchView);
 
-    // Ground
-    if (view.y1 > CONFIG.GROUND_Y) {
+    // Parallax scenery behind everything: stars, mountains, hills and trees.
+    drawScenery(ctx, cam, view, t);
+
+    // Ground, with grass tufts along its edge
+    if (view.y1 > CONFIG.GROUND_Y - 10) {
       ctx.fillStyle = '#4caf50';
-      ctx.fillRect(view.x0, CONFIG.GROUND_Y, cam.w, view.y1 - CONFIG.GROUND_Y);
+      ctx.fillRect(view.x0, CONFIG.GROUND_Y, cam.w, Math.max(0, view.y1 - CONFIG.GROUND_Y));
       ctx.fillStyle = '#388e3c';
       ctx.fillRect(view.x0, CONFIG.GROUND_Y, cam.w, 6);
+      drawGrass(ctx, view);
     }
 
     // Clouds: procedural ovals/circles (cloudart.js) inside each w × h box;
