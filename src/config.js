@@ -18,6 +18,9 @@ export const CONFIG = {
   VIEW_GROWTH: 0.5, // exponent: 0 = fixed zoom, 1 = 1 world unit per CSS px
   VIEW_H_MIN: 560,
   VIEW_H_MAX: 900,
+  // Game zoom: everything in the world draws this much bigger (the camera
+  // shows 1/VIEW_ZOOM as much world). Physics and UI are unaffected.
+  VIEW_ZOOM: 1.5,
   // Canvas backing-store caps (performance): devicePixelRatio and the long
   // side in device pixels.
   MAX_DPR: 2,
@@ -162,7 +165,7 @@ export function layoutFor(winW, winH) {
     cssH = cssW / aspect;
   }
   const grown = CONFIG.VIEW_REF_H * Math.pow(cssH / CONFIG.VIEW_REF_CSS_H, CONFIG.VIEW_GROWTH);
-  const viewH = clamp(grown, CONFIG.VIEW_H_MIN, CONFIG.VIEW_H_MAX);
+  const viewH = clamp(grown, CONFIG.VIEW_H_MIN, CONFIG.VIEW_H_MAX) / CONFIG.VIEW_ZOOM;
   return { cssW, cssH, viewW: viewH * aspect, viewH };
 }
 
