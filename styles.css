@@ -188,6 +188,55 @@ h2 {
   font-size: 2em;
 }
 
+/* Start-screen controls help: Computer and Mobile groups, label/value rows. */
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.6em 1.6em;
+  margin-top: 0.9em;
+  font-size: 0.92em;
+}
+
+/* Narrow (portrait phone) stage: stack the groups in one left-aligned column
+   so their edges line up, centred as a block. */
+@container (max-width: 30em) {
+  .controls {
+    flex-direction: column;
+    align-items: flex-start;
+    width: fit-content;
+    margin-inline: auto;
+  }
+}
+
+.controls-group h3 {
+  margin: 0 0 0.3em;
+  font-size: 1em;
+  color: #ffd54f;
+  text-align: left;
+}
+
+.controls-group dl {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 0.15em 0.6em;
+  margin: 0;
+  text-align: left;
+}
+
+.controls-group dt {
+  font-weight: 700;
+}
+
+.controls-group dt::after {
+  content: ':';
+}
+
+.controls-group dd {
+  margin: 0;
+  opacity: 0.9;
+}
+
 .big-btn {
   margin-top: 0.4em;
   padding: 0.7em 1.6em;

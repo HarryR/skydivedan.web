@@ -26,10 +26,28 @@
           <img id="title-logo" class="title-logo" src="./assets/title-logo-v01-256.png" alt="Sky Dive Dan" />
           <span id="title-fallback" class="title" hidden>Sky Dive<br />Dan</span>
         </h1>
-        <p data-i18n="controlsKeys"></p>
-        <p data-i18n="controlsTouch"></p>
         <button id="begin-btn" class="big-btn" data-i18n="begin">Begin Game</button>
         <button class="lang-btn"><span class="lang-vn">VN</span> / <span class="lang-en">EN</span></button>
+        <div class="controls">
+          <section class="controls-group">
+            <h3 data-i18n="ctlComputer">Computer</h3>
+            <dl>
+              <dt data-i18n="ctlSteer">Steer</dt>
+              <dd data-i18n="ctlKeysSteer">← → or A / D</dd>
+              <dt data-i18n="ctlFart">Fart boost</dt>
+              <dd data-i18n="ctlKeysFart">hold W, ↑ or Space</dd>
+            </dl>
+          </section>
+          <section class="controls-group">
+            <h3 data-i18n="ctlMobile">Mobile</h3>
+            <dl>
+              <dt data-i18n="ctlSteer">Steer</dt>
+              <dd data-i18n="ctlTouchSteer">drag left or right</dd>
+              <dt data-i18n="ctlFart">Fart boost</dt>
+              <dd data-i18n="ctlTouchFart">hold 💨</dd>
+            </dl>
+          </section>
+        </div>
       </section>
 
       <section id="paused" class="screen" hidden>
