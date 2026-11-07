@@ -37,6 +37,11 @@ const TREE_SPACING = 26; // world units between tree slots (in layer space)
 const STAR_TILE = 420; // star field repeats every STAR_TILE world units
 const STARS_PER_TILE = 34;
 const STAR_F = 0.03;
+/** Stars fade in from this fraction of CLOUD_MAX_ALT, fully visible at STAR_FULL. */
+const STAR_START = 0.25;
+const STAR_FULL = 0.9;
+/** Star sizes (world units): dim, medium, bright. */
+const STAR_SIZES = [1.6, 2.4, 3.4];
 
 /** @param {number} e0 @param {number} e1 @param {number} x @returns {number} */
 const smoothstep = (e0, e1, x) => {
@@ -168,7 +173,7 @@ function drawTrees(ctx, cam, view) {
  */
 function drawStars(ctx, cam, view, t) {
   const alt = CONFIG.GROUND_Y - cam.y;
-  const vis = smoothstep(CONFIG.CLOUD_MAX_ALT * 0.4, CONFIG.CLOUD_MAX_ALT * 1.05, alt);
+  const vis = smoothstep(CONFIG.CLOUD_MAX_ALT * STAR_START, CONFIG.CLOUD_MAX_ALT * STAR_FULL, alt);
   if (vis <= 0.01) return;
   const ox = cam.x * (1 - STAR_F);
   const oy = cam.y * (1 - STAR_F);
@@ -186,10 +191,10 @@ function drawStars(ctx, cam, view, t) {
         const big = rand(tseed, k * 4 + 2);
         const tw = 0.6 + 0.4 * Math.sin(t * (1.5 + big * 3) + k);
         // Dim stars need more altitude to appear; bright ones show first.
-        const a = vis * tw * smoothstep(0.7 - big * 0.6, 1, vis);
+        const a = vis * tw * smoothstep(0.5 - big * 0.5, 0.9, vis);
         if (a <= 0.02) continue;
         ctx.globalAlpha = a;
-        const s = big > 0.9 ? 2.2 : big > 0.6 ? 1.5 : 1;
+        const s = STAR_SIZES[big > 0.9 ? 2 : big > 0.6 ? 1 : 0];
         ctx.fillRect(x - s / 2, y - s / 2, s, s);
       }
     }
