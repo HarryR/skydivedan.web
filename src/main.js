@@ -43,6 +43,11 @@ const renderer = createRenderer(canvas);
 game = createGame({ input, ui, renderer });
 if (new URLSearchParams(location.search).has('debug')) game.toggleDebug();
 
+// No text selection or long-press menus anywhere in the game (mobile).
+for (const type of ['selectstart', 'contextmenu', 'dragstart']) {
+  document.addEventListener(type, (e) => e.preventDefault());
+}
+
 // Browsers only allow audio after a user gesture; unlock on the first one.
 window.addEventListener('pointerdown', unlockAudio, { passive: true });
 window.addEventListener('keydown', unlockAudio);

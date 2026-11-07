@@ -1,11 +1,19 @@
 * {
   box-sizing: border-box;
+  /* A game, not a document: no text selection, long-press callouts, image
+     dragging or tap highlight boxes anywhere (mobile). */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-drag: none;
 }
 
 html,
 body {
   margin: 0;
   height: 100%;
+  overscroll-behavior: none; /* no pull-to-refresh / bounce while playing */
   background: #10142e;
   overflow: hidden;
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
