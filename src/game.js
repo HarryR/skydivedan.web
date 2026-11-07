@@ -1,7 +1,7 @@
 // Run state machine: INTRO -> RUNNING <-> PAUSED, RUNNING -> SPLAT -> GAME_OVER.
 // The opening plane/lunch gag (OPENING) is deferred; runs start mid-fall.
 import { CONFIG } from './config.js';
-import { createRun, resetRun, simulateStep, altitudeOf, setView } from './simulation.js';
+import { createRun, resetRun, simulateStep, idleStep, altitudeOf, setView } from './simulation.js';
 import { loadBest, saveBest } from './ui.js';
 
 /** @typedef {import('./input.js').Input} Input */
@@ -121,7 +121,9 @@ export function createGame({ input, ui, renderer }) {
       clockReset = false;
       return r;
     },
-    simulating: () => state === State.RUNNING || state === State.SPLAT,
+    // Everything but PAUSED advances time: the start and game-over screens
+    // keep the world (clouds, pickups) moving behind them.
+    simulating: () => state !== State.PAUSED,
 
     /** @param {number} dt */
     step(dt) {
@@ -137,6 +139,9 @@ export function createGame({ input, ui, renderer }) {
           state = State.GAME_OVER;
           ui.show('gameover');
         }
+      } else if (state === State.INTRO || state === State.GAME_OVER) {
+        idleStep(run, dt, gameTime);
+        gameTime += dt;
       }
     },
 
@@ -144,7 +149,7 @@ export function createGame({ input, ui, renderer }) {
     render(accumulator) {
       const splat =
         state === State.SPLAT ? splatTime / CONFIG.SPLAT_S : state === State.GAME_OVER ? 1 : -1;
-      renderer.draw(run, gameTime + accumulator, { debug, splat });
+      renderer.draw(run, gameTime + accumulator, { debug, splat, hideDan: state === State.INTRO });
       ui.hud(run.balance, best, altitudeOf(run));
     },
   };

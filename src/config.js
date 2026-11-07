@@ -116,6 +116,11 @@ export const CONFIG = {
   MINE_CHANCE: 0.06,
   MINE_RADIUS: 13, // drawn size (body + spikes)
   MINE_HIT_RADIUS: 9, // a bit forgiving: spike tips don't count
+  // Pickups (coins, big coins, mines) expire after a random lifetime so the
+  // field keeps shifting; they blink before vanishing, then refill off-screen.
+  COIN_LIFE_MIN: 10,
+  COIN_LIFE_MAX: 18,
+  COIN_BLINK_S: 2.5,
   PICKUP_FX_S: 0.55, // coin pickup sparkle burst duration
   PICKUP_FX_POOL: 8, // concurrent pickup bursts (ring buffer)
 

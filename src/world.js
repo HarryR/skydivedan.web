@@ -48,6 +48,7 @@ import { CONFIG, lerp, altFrac } from './config.js';
  * @property {number} y centre
  * @property {number} t0 game time of spawn, s (drives the sparkle)
  * @property {number} kind COIN_KIND: normal coin, big coin, or mine
+ * @property {number} expires game time it disappears, s (blinks for COIN_BLINK_S before)
  */
 
 /** Pickup kinds sharing the coin pool, spawner and density rules. */
@@ -167,7 +168,7 @@ export function createWorld() {
   /** @type {Coin[]} */
   const coins = [];
   for (let i = 0; i < CONFIG.COIN_POOL; i++) {
-    coins.push({ active: false, x: 0, y: 0, t0: 0, kind: 0 });
+    coins.push({ active: false, x: 0, y: 0, t0: 0, kind: 0, expires: 0 });
   }
   return {
     clouds,
@@ -433,6 +434,8 @@ function spawnCoin(world, t, dan, offscreenOnly) {
     slot.x = x;
     slot.y = y;
     slot.t0 = t;
+    // Initial fill (t < 0) gets a head start so the first expiries are staggered.
+    slot.expires = t + range(rng, t < 0 ? 2 : CONFIG.COIN_LIFE_MIN, CONFIG.COIN_LIFE_MAX);
     const roll = rng();
     slot.kind =
       roll < CONFIG.MINE_CHANCE
@@ -458,7 +461,8 @@ export function coinCollected(world) {
 /**
  * Keep coins at a target density over the whole simulation window, like
  * clouds, so areas Dan moves into already have coins:
- * - coins that leave the window are retired and replaced at once, off-screen;
+ * - coins that leave the window or expire are retired and replaced at once,
+ *   off-screen;
  * - collected coins are replaced only after a randomized wait: each pickup adds
  *   one "debt", and the hazard process (rate rho(alt)) pays it back one coin
  *   at a time. Replacements also spawn off-screen.
@@ -473,7 +477,9 @@ export function coinCollected(world) {
 export function updateCoins(world, t, dt, cam, dan, alt) {
   const { win } = world;
   for (const k of world.coins) {
-    if (k.active && (k.x < win.x0 || k.x > win.x1 || k.y < win.y0 || k.y > win.y1)) {
+    // Left the window or reached the end of its lifetime: retire it; the
+    // fill below replaces it off-screen straight away (no pickup debt).
+    if (k.active && (t >= k.expires || k.x < win.x0 || k.x > win.x1 || k.y < win.y0 || k.y > win.y1)) {
       k.active = false;
       world.coinCount--;
     }

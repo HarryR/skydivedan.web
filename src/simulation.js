@@ -238,3 +238,17 @@ export function simulateStep(run, input, dt, t) {
   const maxCamY = CONFIG.GROUND_Y - run.cam.h * 0.2;
   if (run.cam.y > maxCamY) run.cam.y = maxCamY;
 }
+
+/**
+ * Keep the world alive without Dan (start and game-over screens): clouds
+ * drift and are replaced off-screen, pickups expire and refill. Dan and the
+ * camera don't move.
+ * @param {Run} run
+ * @param {number} dt step length, s
+ * @param {number} t game time at the start of the step, s
+ */
+export function idleStep(run, dt, t) {
+  const alt = CONFIG.GROUND_Y - run.dan.y;
+  updateClouds(run.world, t + dt, run.cam, run.dan.x, alt);
+  updateCoins(run.world, t + dt, dt, run.cam, run.dan, alt);
+}

@@ -16,6 +16,7 @@ import { loadDanArt, danArtReady, poseFor, drawDanSprite } from './danart.js';
  * @typedef {object} DrawOptions
  * @property {boolean} debug draw colliders, window and counters
  * @property {number} splat squash progress 0..1 while splatting, or -1
+ * @property {boolean} [hideDan] skip drawing Dan (start screen)
  */
 
 /**
@@ -262,7 +263,7 @@ export function createRenderer(canvas) {
    * @param {number} t display game time, s
    * @param {DrawOptions} opts
    */
-  function draw(run, t, { debug, splat }) {
+  function draw(run, t, { debug, splat, hideDan = false }) {
     const { dan, cam, world } = run;
     scale = canvas.width / cam.w;
 
@@ -306,6 +307,9 @@ export function createRenderer(canvas) {
     for (const k of world.coins) {
       if (!k.active) continue;
       if (k.x < view.x0 - reach || k.x > view.x1 + reach || k.y < view.y0 - reach || k.y > view.y1 + reach) continue;
+      // Blink, faster and faster, before expiring.
+      const left = k.expires - t;
+      if (left < CONFIG.COIN_BLINK_S && Math.sin(t * (10 + (CONFIG.COIN_BLINK_S - left) * 10)) < 0) continue;
       if (k.kind === COIN_KIND.MINE) {
         drawMine(k.x, k.y, t);
         continue;
@@ -333,8 +337,8 @@ export function createRenderer(canvas) {
     const exploded = splat >= 0 && run.exploded;
     if (exploded) drawExplosion(ctx, dan.x, dan.y - CONFIG.DAN_H / 2, splatTime(splat), seed);
     else if (splat >= 0) drawSplatPool(ctx, dan.x, dan.y, splatTime(splat), seed);
-    if (exploded) {
-      // nothing left of Dan
+    if (exploded || hideDan) {
+      // nothing left of Dan / start screen shows only the world
     } else if (danArtReady()) {
       if (dan.boosting && splat < 0) drawPuffs(dan.x, dan.y, t);
       poseFor(splat >= 0 ? 0 : dan.vy, t, pose);
