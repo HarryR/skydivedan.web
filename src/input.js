@@ -114,9 +114,26 @@ export function createInput(surface, stick, { onPauseKey, onDebugKey }) {
     state.steer = clamp(keySteer + touchSteer, -1, 1);
     state.boost = Math.max(keyBoost, stickBoost);
 
+    // No thumb on the stick: mirror keyboard / swipe input on the knob so it
+    // always shows what Dan is being told to do.
+    let anyStick = false;
+    for (const q of pointers.values()) if (q.stick) anyStick = true;
+    if (!anyStick) {
+      const r = (stick.getBoundingClientRect().width / 2) * CONFIG.STICK_RANGE;
+      let sx = state.steer;
+      let sy = keyBoost; // full throttle = knob at the top
+      const len = Math.hypot(sx, sy);
+      if (len > 1) {
+        sx /= len;
+        sy /= len;
+      }
+      knobX = sx * r;
+      knobY = -sy * r;
+    }
+
     knob.style.transform = `translate(${knobX}px, ${knobY}px)`;
-    stick.classList.toggle('boosting', stickBoost > 0);
-    stick.style.setProperty('--throttle', String(stickBoost));
+    stick.classList.toggle('boosting', state.boost > 0);
+    stick.style.setProperty('--throttle', String(state.boost));
   }
 
   window.addEventListener('keydown', (e) => {
