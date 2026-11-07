@@ -4,7 +4,15 @@
 /** Gameplay tuning; types are inferred from the literal values. */
 export const CONFIG = {
   // Timing (see SIMULATION_DESIGN.md "Timing loop and pause behavior")
-  SIM_HZ: 30,
+  // Simulation rate. Physics uses per-second rates throughout, so the step
+  // can change at runtime: main.js drops to SIM_HZ_LOW when the device can't
+  // keep up and returns to SIM_HZ once it can (with hysteresis).
+  SIM_HZ: 60,
+  SIM_HZ_LOW: 30,
+  SIM_DEGRADE_FPS: 45, // below this (smoothed) for SIM_DEGRADE_S -> low rate
+  SIM_DEGRADE_S: 2,
+  SIM_RECOVER_FPS: 55, // at or above this for SIM_RECOVER_S -> full rate
+  SIM_RECOVER_S: 8,
   MAX_CATCHUP_STEPS: 5,
 
   // Screen layout (see layoutFor below). The stage takes the window's aspect

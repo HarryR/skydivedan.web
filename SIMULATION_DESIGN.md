@@ -47,7 +47,7 @@ y = startY + velocityY * (gameTime - spawnTime);
 
 Use game time, not `Date.now()`, so pausing a run also pauses cloud motion. Generate a replacement's initial position and movement parameters once when its pool slot is refilled; do not recreate it at its initial position merely because it becomes visible. A run-seeded spawner can make the sequence reproducible.
 
-The simulation asks for a cloud's position at each physics timestamp for collision checks. The renderer can ask at display time for smooth cloud motion. Dan can initially render at the most recent physics state; interpolation between player states is optional if the 30 Hz step looks too choppy. If clouds later need to bob or follow a curved path, use a small analytic function of time where practical; reserve per-tick state for motion that depends on collisions or player interaction.
+The simulation asks for a cloud's position at each physics timestamp for collision checks. The renderer can ask at display time for smooth cloud motion. Dan can initially render at the most recent physics state; interpolation between player states is optional if a low simulation rate looks too choppy. If clouds later need to bob or follow a curved path, use a small analytic function of time where practical; reserve per-tick state for motion that depends on collisions or player interaction.
 
 ## Cloud population and replacement
 
@@ -63,14 +63,16 @@ Unlike coins, cloud replacement does not need a randomized wait after a pickup. 
 
 ## Timing loop and pause behavior
 
-`requestAnimationFrame` drives rendering at the browser's repaint cadence; do not add a separate render cap initially. The simulation rate is independently configurable. Start with 30 Hz, so normal rendering may draw at 60 or 120 Hz while physics updates at 30 Hz.
+`requestAnimationFrame` drives rendering at the browser's repaint cadence; there is no separate render cap. The simulation runs at 60 Hz by default (`SIM_HZ`), one step per frame on a 60 Hz display.
+
+**Graceful degradation.** All physics uses per-second rates (gravity, steering, camera smoothing, spawn hazards, and band-crossing collisions), so the step can change at runtime without changing behaviour. A 30 Hz and a 60 Hz bounce peak within about 3.5% of each other. The frame loop keeps a smoothed frame interval. If the device stays below `SIM_DEGRADE_FPS` (45) for `SIM_DEGRADE_S` (2 s), it drops to `SIM_HZ_LOW` (30 Hz), halving simulation work per frame. After `SIM_RECOVER_FPS` (55) holds for `SIM_RECOVER_S` (8 s), it returns to 60 Hz. The gap between the thresholds and the timers prevents flip-flopping. Single long stalls (over 250 ms) are ignored by the controller and handled by the catch-up cap below. `?prof` shows the current rate.
 
 Cap catch-up at five simulation steps per animation callback. This handles ordinary missed frames without allowing a long main-thread stall to monopolize the page. If more than five steps are due, discard the excess whole-step backlog and keep the fractional remainder. This deliberately skips simulation time after a severe hitch. The hidden-tab case is handled by pausing instead.
 
 Initialize the timestamp before measuring elapsed time. On resume, reset the timestamp and accumulator so paused time is not simulated:
 
 ```js
-const SIM_HZ = 30; // configurable
+const SIM_HZ = 60; // configurable; adaptive (see above)
 const DT = 1 / SIM_HZ;
 const MAX_CATCHUP_STEPS = 5;
 let lastFrameMs = null;

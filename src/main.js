@@ -97,7 +97,7 @@ function reportProf(steps, drawMs) {
   const now = performance.now();
   if (now - profStart < 2000 || !profOut) return;
   const fps = (profFrames * 1000) / (now - profStart);
-  const lines = [`${fps.toFixed(0)} fps  draw ${(profDraw / profFrames).toFixed(2)} ms/frame`];
+  const lines = [`${fps.toFixed(0)} fps  sim ${simHz} Hz  draw ${(profDraw / profFrames).toFixed(2)} ms/frame`];
   for (const [k, v] of Object.entries(prof).sort((a, b) => b[1] - a[1])) {
     if (k !== 'steps') lines.push(`${k.padEnd(9)} ${(v / profFrames).toFixed(2)} ms`);
     prof[k] = 0;
@@ -108,10 +108,38 @@ function reportProf(steps, drawMs) {
   profStart = now;
 }
 
-const DT = 1 / CONFIG.SIM_HZ;
+/** Current simulation rate and step (adaptive, see adaptRate). */
+let simHz = CONFIG.SIM_HZ;
+let DT = 1 / simHz;
 /** @type {number | null} */
 let lastFrameMs = null;
 let accumulator = 0;
+
+// Graceful degradation: smoothed frame interval decides the simulation rate.
+let frameEma = 1 / 60; // seconds
+let slowFor = 0; // seconds spent below SIM_DEGRADE_FPS
+let fastFor = 0; // seconds spent at/above SIM_RECOVER_FPS
+
+/**
+ * Track the frame rate and switch between SIM_HZ and SIM_HZ_LOW with
+ * hysteresis. Only called for real frame intervals while simulating.
+ * @param {number} elapsed seconds since the previous frame
+ */
+function adaptRate(elapsed) {
+  if (elapsed <= 0 || elapsed > 0.25) return; // skip resets and long stalls
+  frameEma += (elapsed - frameEma) * 0.1;
+  const fps = 1 / frameEma;
+  slowFor = fps < CONFIG.SIM_DEGRADE_FPS ? slowFor + elapsed : 0;
+  fastFor = fps >= CONFIG.SIM_RECOVER_FPS ? fastFor + elapsed : 0;
+  if (simHz !== CONFIG.SIM_HZ_LOW && slowFor >= CONFIG.SIM_DEGRADE_S) {
+    simHz = CONFIG.SIM_HZ_LOW;
+    fastFor = 0;
+  } else if (simHz !== CONFIG.SIM_HZ && fastFor >= CONFIG.SIM_RECOVER_S) {
+    simHz = CONFIG.SIM_HZ;
+    slowFor = 0;
+  }
+  DT = 1 / simHz;
+}
 
 /** @param {DOMHighResTimeStamp} nowMs */
 function frame(nowMs) {
@@ -125,6 +153,7 @@ function frame(nowMs) {
 
   let steps = 0;
   if (game.simulating()) {
+    adaptRate(elapsed);
     accumulator += elapsed;
     while (accumulator >= DT && steps < CONFIG.MAX_CATCHUP_STEPS) {
       game.step(DT);
