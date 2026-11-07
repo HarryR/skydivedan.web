@@ -1,0 +1,182 @@
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: #10142e;
+  overflow: hidden;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  color: #fff;
+}
+
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Width, height and font-size are set by main.js (layoutFor): the window's
+   aspect ratio clamped between tall portrait and square, letterboxed beyond
+   that. All UI below is sized in em so it scales with the stage. */
+#stage {
+  position: relative;
+  flex: none;
+  font-size: 16px;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  overflow: hidden;
+}
+
+#view {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+#hud {
+  position: absolute;
+  top: 0.65em;
+  left: 0.75em;
+  display: flex;
+  gap: 0.9em;
+  font-size: 0.95em;
+  text-shadow: 0 1px 2px #0008;
+  pointer-events: none;
+}
+
+.icon-btn {
+  position: absolute;
+  top: 0.5em;
+  right: 0.5em;
+  width: 2.5em;
+  height: 2.5em;
+  border: 0;
+  border-radius: 0.6em;
+  background: #0004;
+  font-size: inherit;
+  cursor: pointer;
+}
+
+.pause-glyph {
+  display: inline-block;
+  width: 0.9em;
+  height: 1.1em;
+  border-left: 0.3em solid #fff;
+  border-right: 0.3em solid #fff;
+}
+
+#fart-btn {
+  position: absolute;
+  bottom: calc(1.25em + env(safe-area-inset-bottom));
+  left: 50%;
+  width: 4.75em;
+  height: 4.75em;
+  margin-left: -2.375em;
+  border-radius: 50%;
+  border: 0.25em solid #fff;
+  background: #8bc34acc;
+  font-size: inherit;
+  touch-action: none;
+}
+
+#fart-btn::before {
+  content: '💨';
+  font-size: 2.1em;
+}
+
+#fart-btn.held {
+  transform: scale(0.92);
+  background: #689f38;
+}
+
+/* Keyboard players don't need the on-screen button. */
+@media (hover: hover) and (pointer: fine) {
+  #fart-btn {
+    opacity: 0.35;
+  }
+}
+
+.screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75em;
+  padding: 1.5em;
+  text-align: center;
+  background: #0007;
+}
+
+.screen p {
+  margin: 0;
+  max-width: 19em;
+  line-height: 1.4;
+}
+
+.title {
+  margin: 0 0 0.3em;
+  font-size: 3.4em;
+  line-height: 0.95;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  color: #ffd54f;
+  text-shadow:
+    0.055em 0.055em 0 #e53935,
+    0.11em 0.11em 0 #0006;
+  text-transform: uppercase;
+}
+
+h2 {
+  margin: 0 0 0.375em;
+  font-size: 2em;
+}
+
+.big-btn {
+  margin-top: 0.4em;
+  padding: 0.7em 1.6em;
+  border: 0;
+  border-radius: 999px;
+  background: #ffd54f;
+  color: #3e2723;
+  font-size: 1.25em;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.big-btn.secondary {
+  background: #fff;
+}
+
+.lang-btn {
+  margin-top: 0.5em;
+  padding: 0.4em 0.9em;
+  border: 0.125em solid #fff8;
+  border-radius: 999px;
+  background: transparent;
+  color: #fff8;
+  font-size: 0.95em;
+  cursor: pointer;
+}
+
+.lang-btn .active {
+  color: #fff;
+  font-weight: 800;
+}
+
+.new-best {
+  color: #ffd54f;
+  font-weight: 800;
+}

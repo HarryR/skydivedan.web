@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+    <title>Sky Dive Dan</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div id="stage">
+      <canvas id="view"></canvas>
+
+      <div id="hud" hidden>
+        <span><span data-i18n="coins">Coins</span> <b id="hud-coins">0</b></span>
+        <span><span data-i18n="best">Best</span> <b id="hud-best">0</b></span>
+        <span><span data-i18n="alt">Alt</span> <b id="hud-alt">0</b></span>
+      </div>
+
+      <button id="pause-btn" class="icon-btn" data-i18n-aria="pause" aria-label="Pause" hidden>
+        <span class="pause-glyph" aria-hidden="true"></span>
+      </button>
+      <button id="fart-btn" data-i18n-aria="fart" aria-label="Fart boost" hidden></button>
+
+      <section id="intro" class="screen">
+        <h1 class="title">Sky Dive<br />Dan</h1>
+        <p data-i18n="controlsKeys"></p>
+        <p data-i18n="controlsTouch"></p>
+        <button id="begin-btn" class="big-btn" data-i18n="begin">Begin Game</button>
+        <button id="lang-btn" class="lang-btn"><span id="lang-vn">VN</span> / <span id="lang-en">EN</span></button>
+      </section>
+
+      <section id="paused" class="screen" hidden>
+        <h2 data-i18n="paused">Paused</h2>
+        <button id="resume-btn" class="big-btn" data-i18n="resume">Resume</button>
+        <button id="restart-btn" class="big-btn secondary" data-i18n="restart">Restart</button>
+      </section>
+
+      <section id="gameover" class="screen" hidden>
+        <h2 class="title" data-i18n="gameOver">GAME OVER</h2>
+        <p><span data-i18n="coins">Coins</span>: <b id="final-score">0</b></p>
+        <p><span data-i18n="best">Best</span>: <b id="final-best">0</b></p>
+        <p id="new-best" class="new-best" data-i18n="newBest" hidden>New best!</p>
+        <button id="again-btn" class="big-btn" data-i18n="playAgain">Play again</button>
+      </section>
+    </div>
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>
