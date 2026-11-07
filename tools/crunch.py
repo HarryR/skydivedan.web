@@ -49,6 +49,7 @@ def crush(path: str) -> bool:
                        check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         if 0 < os.path.getsize(tmp) < os.path.getsize(path):
             os.replace(tmp, path)
+            os.chmod(path, 0o644)  # mkstemp creates 0600; shipped assets must be world-readable
             return True
         return False
     finally:
