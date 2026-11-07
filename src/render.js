@@ -3,6 +3,7 @@ import { CONFIG, lerp, clamp } from './config.js';
 import { cloudX, cloudY, bandTop, bandBottom, viewRect, windowRect } from './world.js';
 import { drawCloud } from './cloudart.js';
 import { drawSplatPool, drawSplatDrops, splatSeed, splatTime } from './splat.js';
+import { drawPickupSparkles } from './sparkle.js';
 import { loadDanArt, danArtReady, poseFor, drawDanSprite } from './danart.js';
 
 /** @typedef {import('./danart.js').DanPose} DanPose */
@@ -258,6 +259,9 @@ export function createRenderer(canvas) {
     } else if (splat >= 0) drawSplat(dan.x, dan.y, splat);
     else drawDan(dan.x, dan.y, dan.vy, dan.boosting, t);
     if (splat >= 0) drawSplatDrops(ctx, dan.x, dan.y, splatTime(splat), seed);
+
+    // Coin pickup sparkles, in front of Dan.
+    drawPickupSparkles(ctx, world.pickups, t);
 
     if (debug) drawDebug(run, t);
   }

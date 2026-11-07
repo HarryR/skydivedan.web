@@ -50,6 +50,14 @@ import { CONFIG, lerp, altFrac } from './config.js';
  */
 
 /**
+ * A recent coin pickup, for the sparkle burst (render-only; ring buffer).
+ * @typedef {object} Pickup
+ * @property {number} x coin centre
+ * @property {number} y coin centre
+ * @property {number} t game time of pickup, s (-Infinity = unused)
+ */
+
+/**
  * @typedef {object} World
  * @property {Cloud[]} clouds fixed-capacity pool (CONFIG.CLOUD_POOL)
  * @property {Coin[]} coins fixed-capacity pool (CONFIG.COIN_POOL)
@@ -58,6 +66,8 @@ import { CONFIG, lerp, altFrac } from './config.js';
  * @property {Rng} rng run-seeded generator for clouds and coins
  * @property {number} coinHazard accumulated rho·dt since the last coin spawn
  * @property {number} coinThreshold Exp(1)-distributed hazard needed for the next spawn
+ * @property {Pickup[]} pickups fixed ring buffer of recent pickups (CONFIG.PICKUP_FX_POOL)
+ * @property {number} pickupNext next ring-buffer slot to overwrite
  * @property {Rect} view scratch: camera viewport, refreshed each step
  * @property {Rect} win scratch: simulation window, refreshed each step
  */
@@ -150,6 +160,8 @@ export function createWorld() {
     rng: makeRng(1),
     coinHazard: 0,
     coinThreshold: 1,
+    pickups: Array.from({ length: CONFIG.PICKUP_FX_POOL }, () => ({ x: 0, y: 0, t: -Infinity })),
+    pickupNext: 0,
     view: { x0: 0, y0: 0, x1: 0, y1: 0 },
     win: { x0: 0, y0: 0, x1: 0, y1: 0 },
   };
@@ -285,6 +297,7 @@ export function resetWorld(world, seed, cam, dan) {
   for (const k of world.coins) k.active = false;
   world.cloudCount = 0;
   world.coinCount = 0;
+  for (const p of world.pickups) p.t = -Infinity;
   world.coinHazard = 0;
   world.coinThreshold = -Math.log(1 - world.rng());
 
@@ -338,6 +351,21 @@ export function updateClouds(world, t, cam, danX, alt) {
 }
 
 // --- Coins -----------------------------------------------------------------
+
+/**
+ * Record a pickup for the sparkle burst, overwriting the oldest slot.
+ * @param {World} world
+ * @param {number} x
+ * @param {number} y
+ * @param {number} t game time, s
+ */
+export function recordPickup(world, x, y, t) {
+  const p = world.pickups[world.pickupNext];
+  p.x = x;
+  p.y = y;
+  p.t = t;
+  world.pickupNext = (world.pickupNext + 1) % world.pickups.length;
+}
 
 /**
  * Place one coin near Dan, inside the window and cloud band, but never on him.

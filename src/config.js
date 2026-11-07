@@ -106,6 +106,8 @@ export const CONFIG = {
   COIN_SPAWN_RANGE: 420, // max distance from Dan
   COIN_MIN_DIST: 90, // never spawn on top of Dan
   COIN_SPARKLE_S: 0.35,
+  PICKUP_FX_S: 0.55, // coin pickup sparkle burst duration
+  PICKUP_FX_POOL: 8, // concurrent pickup bursts (ring buffer)
 
   // Camera.
   CAMERA_FOLLOW: 8, // 1/s, exponential smoothing rate

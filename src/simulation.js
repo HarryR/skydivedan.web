@@ -1,7 +1,7 @@
 // Fixed-step player physics, cloud landing, coin pickup, fart boost, ground.
 // Step order follows SIMULATION_DESIGN.md "One simulation step".
 import { CONFIG, lerp, clamp, altFrac } from './config.js';
-import { createWorld, resetWorld, updateClouds, updateCoins, cloudX, bandTop, bandBottom } from './world.js';
+import { createWorld, resetWorld, updateClouds, updateCoins, cloudX, bandTop, bandBottom, recordPickup } from './world.js';
 
 /** @typedef {import('./world.js').World} World */
 /** @typedef {import('./world.js').Camera} Camera */
@@ -190,6 +190,7 @@ export function simulateStep(run, input, dt, t) {
       k.active = false;
       world.coinCount--;
       run.balance += 1;
+      recordPickup(world, k.x, k.y, t1);
     }
   }
   updateCoins(world, t1, dt, run.cam, d, CONFIG.GROUND_Y - d.y);
