@@ -5,6 +5,7 @@ import { createInput } from './input.js';
 import { createRenderer } from './render.js';
 import { createUI } from './ui.js';
 import { createGame } from './game.js';
+import { unlockAudio } from './audio.js';
 
 /** @typedef {import('./game.js').Game} Game */
 
@@ -41,6 +42,10 @@ const input = createInput(stage, ui.fartBtn, {
 const renderer = createRenderer(canvas);
 game = createGame({ input, ui, renderer });
 if (new URLSearchParams(location.search).has('debug')) game.toggleDebug();
+
+// Browsers only allow audio after a user gesture; unlock on the first one.
+window.addEventListener('pointerdown', unlockAudio, { passive: true });
+window.addEventListener('keydown', unlockAudio);
 
 // Size the stage to the window (square on landscape, portrait on phones) and
 // tell the game how much world to show. The canvas backing store follows the

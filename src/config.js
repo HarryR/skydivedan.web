@@ -132,6 +132,7 @@ export const CONFIG = {
   SPLAT_S: 1.2,
   BEST_KEY: 'skydivedan.best.v1',
   LANG_KEY: 'skydivedan.lang.v1',
+  SOUND_KEY: 'skydivedan.sound.v1',
 
   // Touch steering: full steer at this horizontal offset in CSS px.
   TOUCH_FULL_STEER_PX: 56,

@@ -2,6 +2,7 @@
 import { CONFIG } from './config.js';
 import { apply, getLang, setLang } from './i18n.js';
 import { createShareQr } from './qr.js';
+import { isMuted, setMuted, unlockAudio } from './audio.js';
 
 /** @typedef {'intro' | 'paused' | 'gameover'} ScreenName */
 
@@ -82,6 +83,23 @@ export function createUI(root, handlers) {
       showLang();
     });
   }
+
+  // Sound toggles (one per screen), kept in sync.
+  const soundBtns = root.querySelectorAll('.sound-btn');
+  const showSound = () => {
+    for (const b of soundBtns) {
+      b.textContent = isMuted() ? '🔇' : '🔊';
+      b.setAttribute('aria-pressed', String(!isMuted()));
+    }
+  };
+  for (const b of soundBtns) {
+    b.addEventListener('click', () => {
+      unlockAudio();
+      setMuted(!isMuted());
+      showSound();
+    });
+  }
+  showSound();
 
   function showLang() {
     const l = getLang();

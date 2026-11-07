@@ -35,6 +35,14 @@ import {
  */
 
 /**
+ * What happened during the last simulation step, for sound and haptics.
+ * @typedef {object} StepEvents
+ * @property {number} coins pickups (normal or big) this step
+ * @property {number} bigCoins big-coin pickups this step
+ * @property {number} bounces cloud bounces this step (0 or 1)
+ */
+
+/**
  * Everything that belongs to one run.
  * @typedef {object} Run
  * @property {Dan} dan
@@ -43,6 +51,7 @@ import {
  * @property {number} balance coins = score = fart fuel (fractional while draining; display floors it)
  * @property {boolean} landed hit the ground during the last step
  * @property {boolean} exploded touched a mine during the last step (run ends)
+ * @property {StepEvents} events what happened during the last step
  * @property {number} candidates debug: clouds that passed the cheap reject last step
  */
 
@@ -55,6 +64,7 @@ export function createRun() {
     balance: 0,
     landed: false,
     exploded: false,
+    events: { coins: 0, bigCoins: 0, bounces: 0 },
     candidates: 0,
   };
 }
@@ -110,6 +120,10 @@ export function simulateStep(run, input, dt, t) {
   const alt = CONFIG.GROUND_Y - d.y;
   const a = altFrac(alt);
   const t1 = t + dt;
+  const ev = run.events;
+  ev.coins = 0;
+  ev.bigCoins = 0;
+  ev.bounces = 0;
 
   // 1. Input -> 3. forces
   d.prevX = d.x;
@@ -193,6 +207,7 @@ export function simulateStep(run, input, dt, t) {
       d.vy = bounce;
     }
     d.landedAt = t1;
+    ev.bounces++;
   }
 
   // 7. Pickups: Dan's swept AABB, expanded by each pickup's radius, vs its
@@ -216,6 +231,8 @@ export function simulateStep(run, input, dt, t) {
     }
     const value = k.kind === COIN_KIND.BIG ? CONFIG.COIN_BIG_VALUE : 1;
     run.balance += value;
+    ev.coins++;
+    if (k.kind === COIN_KIND.BIG) ev.bigCoins++;
     recordPickup(world, k.x, k.y, t1, value);
     coinCollected(world);
   }

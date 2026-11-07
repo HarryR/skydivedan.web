@@ -3,6 +3,7 @@
 import { CONFIG } from './config.js';
 import { createRun, resetRun, simulateStep, idleStep, altitudeOf, setView } from './simulation.js';
 import { loadBest, saveBest } from './ui.js';
+import { sfx, setFart, buzz, unlockAudio } from './audio.js';
 
 /** @typedef {import('./input.js').Input} Input */
 /** @typedef {import('./ui.js').UI} UI */
@@ -47,12 +48,28 @@ export function createGame({ input, ui, renderer }) {
   let clockReset = true;
   let debug = false;
 
+  // Rainbow trail: on when the balance first beats the previous best (with
+  // more than one coin) for TRAIL_BEST_S, and while picking up more than one
+  // coin per second on average (the last RATE_COUNT pickups within RATE_WINDOW_S).
+  const TRAIL_BEST_S = 4;
+  const RATE_COUNT = 6;
+  const RATE_WINDOW_S = 5;
+  const pickupTimes = new Float64Array(RATE_COUNT).fill(-Infinity);
+  let pickupNext = 0;
+  let trailUntil = -Infinity;
+  let bestCelebrated = false;
+
   resetRun(run, 1);
   ui.show('intro');
 
   function startRun() {
+    unlockAudio();
     resetRun(run, (Math.random() * 2 ** 32) >>> 0);
     gameTime = 0;
+    pickupTimes.fill(-Infinity);
+    pickupNext = 0;
+    trailUntil = -Infinity;
+    bestCelebrated = false;
     input.reset();
     clockReset = true;
     state = State.RUNNING;
@@ -63,11 +80,13 @@ export function createGame({ input, ui, renderer }) {
     if (state !== State.RUNNING) return;
     state = State.PAUSED;
     input.reset();
+    setFart(false);
     ui.show('paused');
   }
 
   function resume() {
     if (state !== State.PAUSED) return;
+    unlockAudio();
     clockReset = true; // do not simulate paused time
     state = State.RUNNING;
     ui.show(null);
@@ -83,6 +102,15 @@ export function createGame({ input, ui, renderer }) {
     ui.gameOver(score, best, isNewBest);
     state = State.SPLAT; // short, non-pausable sequence
     splatTime = 0;
+    trailUntil = -Infinity;
+    setFart(false);
+    if (run.exploded) {
+      sfx.boom();
+      buzz(350);
+    } else {
+      sfx.splat();
+      buzz([70, 40, 140]);
+    }
     input.reset();
     ui.hideRunControls();
   }
@@ -90,6 +118,32 @@ export function createGame({ input, ui, renderer }) {
   // Hidden tab: a run pauses (and stays paused until Resume). Other states
   // aren't pausable, but on return we reset the clock so the hidden time is
   // never simulated as a catch-up burst.
+  /** Sounds, haptics and the rainbow trail, from the last step's events. */
+  function react() {
+    const ev = run.events;
+    if (ev.bounces) sfx.bounce();
+    if (ev.coins) {
+      if (ev.bigCoins) {
+        sfx.bigCoin();
+        buzz([20, 30, 25]);
+      } else {
+        sfx.coin();
+        buzz(12);
+      }
+      for (let i = 0; i < ev.coins; i++) {
+        pickupTimes[pickupNext] = gameTime;
+        pickupNext = (pickupNext + 1) % RATE_COUNT;
+      }
+      // pickupTimes[pickupNext] is now the oldest of the last RATE_COUNT pickups.
+      if (pickupTimes[pickupNext] >= gameTime - RATE_WINDOW_S) trailUntil = Math.max(trailUntil, gameTime + 0.6);
+    }
+    if (!bestCelebrated && run.balance > best && run.balance > 1) {
+      bestCelebrated = true;
+      trailUntil = Math.max(trailUntil, gameTime + TRAIL_BEST_S);
+    }
+    setFart(run.dan.boosting);
+  }
+
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'hidden') pause();
     else clockReset = true;
@@ -130,6 +184,7 @@ export function createGame({ input, ui, renderer }) {
       if (state === State.RUNNING) {
         simulateStep(run, input.state, dt, gameTime);
         gameTime += dt;
+        react();
         if (run.landed || run.exploded) endRun();
       } else if (state === State.SPLAT) {
         // World keeps drifting under the splat; Dan stays put.
@@ -149,7 +204,8 @@ export function createGame({ input, ui, renderer }) {
     render(accumulator) {
       const splat =
         state === State.SPLAT ? splatTime / CONFIG.SPLAT_S : state === State.GAME_OVER ? 1 : -1;
-      renderer.draw(run, gameTime + accumulator, { debug, splat, hideDan: state === State.INTRO });
+      const trail = state === State.RUNNING && gameTime < trailUntil;
+      renderer.draw(run, gameTime + accumulator, { debug, splat, hideDan: state === State.INTRO, trail });
       ui.hud(run.balance, best, altitudeOf(run));
     },
   };

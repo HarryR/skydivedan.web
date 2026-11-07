@@ -22,7 +22,7 @@ const easeOut = (p) => 1 - (1 - p) ** 3;
  * @param {number} y
  * @param {number} r tip radius
  */
-function star(ctx, x, y, r) {
+export function star(ctx, x, y, r) {
   const w = r * 0.28;
   ctx.moveTo(x, y - r);
   ctx.lineTo(x + w, y - w);

@@ -5,6 +5,7 @@ import { drawCloud } from './cloudart.js';
 import { drawSplatPool, drawSplatDrops, drawExplosion, splatSeed, splatTime } from './splat.js';
 import { drawPickupSparkles } from './sparkle.js';
 import { drawScenery, drawGrass } from './scenery.js';
+import { createTrail, sampleTrail, drawTrail } from './trail.js';
 import { loadDanArt, danArtReady, poseFor, drawDanSprite } from './danart.js';
 
 /** @typedef {import('./danart.js').DanPose} DanPose */
@@ -17,6 +18,7 @@ import { loadDanArt, danArtReady, poseFor, drawDanSprite } from './danart.js';
  * @property {boolean} debug draw colliders, window and counters
  * @property {number} splat squash progress 0..1 while splatting, or -1
  * @property {boolean} [hideDan] skip drawing Dan (start screen)
+ * @property {boolean} [trail] rainbow sparkle trail is on (record Dan's path)
  */
 
 /**
@@ -57,6 +59,7 @@ export function createRenderer(canvas) {
 
   /** 1 = facing right, -1 = left; kept from the last clear horizontal motion */
   let facing = 1;
+  const rainbow = createTrail();
 
   // Sprite Dan (danart.js) once its parts load; procedural Dan until then.
   loadDanArt();
@@ -263,7 +266,7 @@ export function createRenderer(canvas) {
    * @param {number} t display game time, s
    * @param {DrawOptions} opts
    */
-  function draw(run, t, { debug, splat, hideDan = false }) {
+  function draw(run, t, { debug, splat, hideDan = false, trail = false }) {
     const { dan, cam, world } = run;
     scale = canvas.width / cam.w;
 
@@ -331,6 +334,10 @@ export function createRenderer(canvas) {
     // DAN_W × DAN_H collider: the soles of both shoes sit exactly on y.
     if (dan.vx > 5) facing = 1;
     else if (dan.vx < -5) facing = -1;
+    // Rainbow sparkle trail, behind Dan.
+    if (trail && splat < 0) sampleTrail(rainbow, dan.x, dan.y, t);
+    drawTrail(ctx, rainbow, t);
+
     // Death: a mine blows Dan up in mid-air (he isn't drawn); hitting the
     // ground splats him (red pool behind, squashed Dan, droplets in front).
     const seed = splatSeed(dan.x);

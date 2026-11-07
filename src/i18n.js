@@ -28,6 +28,7 @@ const STRINGS = {
     playAgain: 'Play again',
     fart: 'Fart boost',
     share: 'Show QR code to share this game',
+    sound: 'Sound on/off',
   },
   vi: {
     begin: 'Bắt đầu',
@@ -51,6 +52,7 @@ const STRINGS = {
     playAgain: 'Chơi lại',
     fart: 'Xì hơi',
     share: 'Hiện mã QR để chia sẻ trò chơi',
+    sound: 'Bật/tắt âm thanh',
   },
 };
 

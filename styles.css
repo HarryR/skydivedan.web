@@ -253,6 +253,10 @@ h2 {
   background: #fff;
 }
 
+.toggles {
+  margin-top: 0.5em;
+}
+
 .lang-btn {
   margin-top: 0.5em;
   padding: 0.4em 0.9em;
@@ -261,6 +265,26 @@ h2 {
   background: transparent;
   color: #fff8;
   font-size: 0.95em;
+  cursor: pointer;
+}
+
+.toggles {
+  display: flex;
+  gap: 0.5em;
+  align-items: center;
+}
+
+.toggles .lang-btn {
+  margin-top: 0;
+}
+
+.sound-btn {
+  padding: 0.25em 0.6em;
+  border: 0.125em solid #fff8;
+  border-radius: 999px;
+  background: transparent;
+  font-size: 0.95em;
+  line-height: 1.2;
   cursor: pointer;
 }
 
