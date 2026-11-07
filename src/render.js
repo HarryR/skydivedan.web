@@ -1,5 +1,5 @@
 // Camera transform, Canvas 2D drawing with placeholder shapes, debug overlay.
-import { CONFIG, lerp, clamp } from './config.js';
+import { CONFIG, lerp, clamp, frac } from './config.js';
 import { cloudX, cloudY, bandTop, bandBottom, viewRect, windowRect, COIN_KIND } from './world.js';
 import { drawCloud } from './cloudart.js';
 import { drawSplatPool, drawSplatDrops, drawExplosion, splatSeed, splatTime } from './splat.js';
@@ -95,7 +95,7 @@ export function createRenderer(canvas) {
       ctx.fillText('10', x, y + 0.5);
       ctx.textBaseline = 'alphabetic';
       // a slow glint so big coins catch the eye
-      const g = (t * 0.8 + x * 0.01) % 1;
+      const g = frac(t * 0.8 + x * 0.01);
       if (g < 0.25) {
         ctx.fillStyle = `rgba(255,255,255,${0.8 * (1 - g / 0.25)})`;
         ctx.beginPath();
@@ -119,15 +119,15 @@ export function createRenderer(canvas) {
     // Radar ping: red rings expanding from the mine and fading, two staggered
     // per period, each mine on its own phase.
     const period = CONFIG.MINE_PING_S;
-    const phase = (t / period + x * 0.013) % 1;
+    const phase = frac(t / period + x * 0.013); // x can be negative
     ctx.strokeStyle = '#ff1744';
     for (let i = 0; i < 2; i++) {
-      const p = (phase + i * 0.5) % 1;
+      const p = frac(phase + i * 0.5);
       const ease = 1 - (1 - p) * (1 - p);
       ctx.globalAlpha = (1 - p) * 0.75;
       ctx.lineWidth = 2.2 - p * 1.4;
       ctx.beginPath();
-      ctx.arc(x, cy, CONFIG.MINE_RADIUS * (0.9 + ease * CONFIG.MINE_PING_REACH), 0, Math.PI * 2);
+      ctx.arc(x, cy, Math.max(0, CONFIG.MINE_RADIUS * (0.9 + ease * CONFIG.MINE_PING_REACH)), 0, Math.PI * 2);
       ctx.stroke();
     }
     ctx.globalAlpha = 1;
@@ -170,7 +170,7 @@ export function createRenderer(canvas) {
     ctx.scale(facing, 1);
     ctx.fillStyle = 'rgba(160, 200, 90, 0.75)';
     for (let i = 0; i < 3; i++) {
-      const j = (t * 9 + i * 1.7) % 1;
+      const j = frac(t * 9 + i * 1.7);
       ctx.beginPath();
       ctx.arc(-6 - j * 6 + Math.sin(t * 20 + i) * 2, hipY + 4 + j * 20, 4 + j * 6, 0, Math.PI * 2);
       ctx.fill();
@@ -202,7 +202,7 @@ export function createRenderer(canvas) {
     if (boosting) {
       ctx.fillStyle = 'rgba(160, 200, 90, 0.75)';
       for (let i = 0; i < 3; i++) {
-        const j = (t * 9 + i * 1.7) % 1;
+        const j = frac(t * 9 + i * 1.7);
         ctx.beginPath();
         ctx.arc(-4 - j * 6 + Math.sin(t * 20 + i) * 2, hipY + 4 + j * 20, 4 + j * 6, 0, Math.PI * 2);
         ctx.fill();

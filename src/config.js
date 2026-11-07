@@ -182,6 +182,14 @@ export const CONFIG = {
 export const lerp = (a, b, t) => a + (b - a) * t;
 
 /**
+ * Fractional part in [0, 1), also for negative v (JS % keeps the sign, so
+ * (-0.3) % 1 is -0.3; this returns 0.7). Use for every phase/cycle value.
+ * @param {number} v
+ * @returns {number}
+ */
+export const frac = (v) => v - Math.floor(v);
+
+/**
  * @param {number} v
  * @param {number} lo
  * @param {number} hi
