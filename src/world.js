@@ -37,6 +37,7 @@ import { CONFIG, lerp, altFrac } from './config.js';
  * @property {number} t0 game time of spawn, s
  * @property {number} w box width (= bounce band width)
  * @property {number} h box height
+ * @property {number} seed 32-bit seed for the procedural art (cloudart.js)
  */
 
 /**
@@ -134,7 +135,7 @@ export function createWorld() {
   /** @type {Cloud[]} */
   const clouds = [];
   for (let i = 0; i < CONFIG.CLOUD_POOL; i++) {
-    clouds.push({ active: false, x0: 0, y0: 0, vx: 0, vy: 0, t0: 0, w: 0, h: 0 });
+    clouds.push({ active: false, x0: 0, y0: 0, vx: 0, vy: 0, t0: 0, w: 0, h: 0, seed: 0 });
   }
   /** @type {Coin[]} */
   const coins = [];
@@ -262,6 +263,7 @@ function spawnCloud(world, c, t, danX, offscreenOnly, avoid) {
     c.t0 = t;
     c.w = w;
     c.h = h;
+    c.seed = (rng() * 4294967296) >>> 0;
     world.cloudCount++;
     return true;
   }

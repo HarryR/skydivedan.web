@@ -1,6 +1,7 @@
 // Camera transform, Canvas 2D drawing with placeholder shapes, debug overlay.
 import { CONFIG, lerp, clamp } from './config.js';
 import { cloudX, cloudY, bandTop, bandBottom, viewRect, windowRect } from './world.js';
+import { drawCloud } from './cloudart.js';
 
 /** @typedef {import('./world.js').Rect} Rect */
 /** @typedef {import('./simulation.js').Run} Run */
@@ -181,23 +182,14 @@ export function createRenderer(canvas) {
       ctx.fillRect(view.x0, CONFIG.GROUND_Y, cam.w, 6);
     }
 
-    // Clouds: art fills the w × h box; the body ellipse is widest at mid-height
-    // so the full-width bounce band (middle 3/5) matches what the player sees.
-    ctx.fillStyle = '#ffffff';
+    // Clouds: procedural ovals/circles (cloudart.js) inside each w × h box;
+    // the art fills the box across the bounce band.
     for (const c of world.clouds) {
       if (!c.active) continue;
       const x = cloudX(c, t);
       const y = cloudY(c, t);
       if (x > view.x1 || x + c.w < view.x0 || y > view.y1 || y + c.h < view.y0) continue;
-      const w = c.w;
-      const h = c.h;
-      ctx.beginPath();
-      ctx.ellipse(x + w / 2, y + h * 0.6, w / 2, h * 0.4, 0, 0, Math.PI * 2);
-      ctx.moveTo(x + w * 0.34 + h * 0.3, y + h * 0.4);
-      ctx.arc(x + w * 0.34, y + h * 0.4, h * 0.3, 0, Math.PI * 2);
-      ctx.moveTo(x + w * 0.6 + h * 0.34, y + h * 0.34);
-      ctx.arc(x + w * 0.6, y + h * 0.34, h * 0.34, 0, Math.PI * 2);
-      ctx.fill();
+      drawCloud(ctx, x, y, c.w, c.h, c.seed);
     }
 
     // Coins

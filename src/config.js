@@ -76,6 +76,21 @@ export const CONFIG = {
   CLOUD_SPAWN_TRIES: 8,
   CLOUD_MIN_OFFSCREEN: 24, // keep spawns at least this far outside the viewport
   CLOUD_H_RATIO: 0.45, // visual box height / width
+  // Procedural cloud art (cloudart.js): random ovals/circles in the box.
+  CLOUD_BASE3_W: 105, // clouds wider than this get 3 base ovals instead of 2
+  CLOUD_BASE_RY: 0.26, // base oval vertical radius, fraction of h (+0..0.06)
+  CLOUD_PUFFS_MIN: 2,
+  CLOUD_PUFFS_MAX: 4,
+  CLOUD_PUFF_R_MIN: 0.24, // puff radius range, fraction of h
+  CLOUD_PUFF_R_MAX: 0.44,
+  CLOUD_PUFF_OVAL: 0.35, // puffs up to this much wider than tall
+  CLOUD_OUTLINE: 1.6, // outline thickness, world units
+  CLOUD_SHADE_LIFT: 0.3, // underside shade depth, fraction of each shape's ry
+  CLOUD_TOP_LIFT: 0.75, // white cap: shapes keep only their top (1 - this) of ry
+  CLOUD_COLOR_OUTLINE: '#1d3c8f',
+  CLOUD_COLOR_SHADE: '#a8c7f0',
+  CLOUD_COLOR_BODY: '#e8f1fe',
+  CLOUD_COLOR_TOP: '#ffffff',
   // Bounce band, as fractions of the cloud's visual box height from its top:
   // the middle 3/5 vertically, full width horizontally.
   CLOUD_BAND_TOP: 0.2,

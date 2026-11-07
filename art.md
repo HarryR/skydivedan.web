@@ -44,12 +44,12 @@ These are the placeholder renderer colors to build from, not an immutable palett
 
 ## Clouds
 
-- Build a small family of matching transparent cloud components rather than one repeated cloud image.
-- Use base/body pieces and rounded puffs in a few sizes and silhouettes. Compose overlapping components into small, medium, and large clouds with varied but coherent outlines.
-- The cloud's visual box is `w × 0.45w` world units. Art must fill that box, and the opaque silhouette must span the full width throughout the bounce band (20%–80% of the box height). Puffs may add shape in the top 20%; the bottom 20% may taper. A cloud that narrows inside the band makes Dan bounce on empty sky.
-- Keep the bounce collider as separate data, but make its full-width band visually supported by opaque cloud art. Check alignment with the `?debug` overlay, which draws the box and bounce band.
-- Generate a coordinated component sheet, then compose about 8–12 finished cloud variants into offscreen canvases once at load. At spawn, choose a cached variant using the cloud's seeded variant id and scale it to `w × 0.45w`; do not allocate a new canvas or rebuild a composition for each spawn.
-- Keep components consistent in outline, shading, light direction, and white/soft-blue palette. Pure white needs a soft-blue underside or outline to stay visible against the lower sky. Avoid seams and a tiled, modular look.
+**Decision: clouds are procedural, not sprites.** [src/cloudart.js](src/cloudart.js) draws each cloud every frame as random ovals and circles inside its box, generated from the cloud's 32-bit seed. A given cloud looks the same every frame, and nothing is stored or allocated per cloud. No cloud image assets are needed. All tuning lives in [src/config.js](src/config.js) (`CLOUD_*` art settings), so shape and style changes show up on reload.
+
+- **Style**, taken from `assets/originals/cloud-components-v01.png`: navy outline, soft-blue underside, pale body, and white caps. These are drawn as four layered passes over the same shapes: outline grown by `CLOUD_OUTLINE`; shade; body with its bottom lifted by `CLOUD_SHADE_LIFT`; white cap with `CLOUD_TOP_LIFT`. The outline keeps clouds readable against the light lower sky.
+- **Shape and collider:** the cloud's box is `w × 0.45w` world units. A row of 2–3 base ovals spans the full width across the bounce band (20%–80% of the box height). 2–4 puffs sit on top, and one of them touches the box top. This makes the visible body line up with where Dan bounces. Check alignment with the `?debug` overlay, which draws the box and band.
+- The generated `cloud-puff-v01`–`v04` drafts are not used. They have no outline, so they vanish against the light sky. Their soft, glowing alpha edges turn into grey fringes when crunched. Their proportions don't fit the box (v03 is square, v04 is a sliver).
+- If a pixel look is wanted later, render the same shapes into a low-resolution offscreen canvas and draw it with smoothing off.
 
 ## Other game art
 
@@ -65,7 +65,7 @@ These are the placeholder renderer colors to build from, not an immutable palett
 - The first title-logo concept is `assets/originals/title-logo-v01.png`; the game loads `assets/title-logo-v01-256.png`.
 
 1. Establish a small style reference and confirm the palette.
-2. Generate the cloud component sheet first; slice it into assets and bake 8–12 variants. Check the bounce band in the game.
+2. Clouds are done procedurally (see [Clouds](#clouds)); tune them in config rather than generating art.
 3. Add a readable coin sprite.
 4. Create the static wordmark and check it at phone size.
 5. Consider Dan's layered rig last; the procedural Dan already reads clearly, so only replace him if time allows and the art meaningfully improves the game.
@@ -74,7 +74,7 @@ These are the placeholder renderer colors to build from, not an immutable palett
 
 For generated sheets, create each visual family together (all cloud parts on one sheet, all Dan rig parts on one sheet) to reduce style drift between separate generations. Verify that transparent corners have real alpha, not a painted checkerboard. Existing Python PIL 12.x and ImageMagick are available for slicing and export; do not add a new image-processing dependency for this pass.
 
-Use relative paths such as `./assets/clouds.png` for GitHub Pages. Load images asynchronously and keep the current procedural rendering as a fallback until assets load and if they fail. The Pages workflow publishes `assets/` when present, excluding `assets/originals/`.
+Use relative paths such as `./assets/coin.png` for GitHub Pages. Load images asynchronously and keep the current procedural rendering as a fallback until assets load and if they fail. The Pages workflow publishes `assets/` when present, excluding `assets/originals/`.
 
 Favor transparent PNG assets for illustrated sprites and the logo. Add enough atlas padding for limb pivots without making each small sprite excessively large.
 
@@ -91,7 +91,6 @@ Display shipped assets hard-edged: `image-rendering: pixelated` in CSS, and `ctx
 |---|---|---|
 | Title wordmark | — | **256 px wide, 16 colours** (`title-logo-v01-256.png`, 4.5 KB after pngcrush, from a 1.4 MB source) |
 | Dan base at the collider size | 22 × 34 world units | about 2 px/world unit: ~44 × 68 px; rig limbs need atlas padding |
-| Largest cloud | 150 × 67.5 world units | about 2 px/world unit: ~300 × 135 px per baked variant |
 | Coin | 22 world-unit diameter | ~24–32 px square |
 
 Generate sources at 3–4 px per world unit or higher so there is detail to crunch from. Adjust shipped sizes and palette counts by eye in the game. Lower is fine as long as the art still reads.
