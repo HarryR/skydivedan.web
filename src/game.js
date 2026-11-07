@@ -128,7 +128,7 @@ export function createGame({ input, ui, renderer }) {
       if (state === State.RUNNING) {
         simulateStep(run, input.state, dt, gameTime);
         gameTime += dt;
-        if (run.landed) endRun();
+        if (run.landed || run.exploded) endRun();
       } else if (state === State.SPLAT) {
         // World keeps drifting under the splat; Dan stays put.
         gameTime += dt;

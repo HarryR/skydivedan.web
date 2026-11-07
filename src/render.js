@@ -1,8 +1,8 @@
 // Camera transform, Canvas 2D drawing with placeholder shapes, debug overlay.
 import { CONFIG, lerp, clamp } from './config.js';
-import { cloudX, cloudY, bandTop, bandBottom, viewRect, windowRect } from './world.js';
+import { cloudX, cloudY, bandTop, bandBottom, viewRect, windowRect, COIN_KIND } from './world.js';
 import { drawCloud } from './cloudart.js';
-import { drawSplatPool, drawSplatDrops, splatSeed, splatTime } from './splat.js';
+import { drawSplatPool, drawSplatDrops, drawExplosion, splatSeed, splatTime } from './splat.js';
 import { drawPickupSparkles } from './sparkle.js';
 import { drawScenery, drawGrass } from './scenery.js';
 import { loadDanArt, danArtReady, poseFor, drawDanSprite } from './danart.js';
@@ -61,6 +61,79 @@ export function createRenderer(canvas) {
   loadDanArt();
   /** @type {DanPose} reused every frame */
   const pose = { armFront: 0, armBack: 0, legFront: 0, legBack: 0 };
+
+  /**
+   * A gold coin; big coins get an inner ring and an embossed "10".
+   * @param {number} x
+   * @param {number} y
+   * @param {number} r radius
+   * @param {boolean} big
+   * @param {number} t display game time, s (shine)
+   */
+  function drawCoin(x, y, r, big, t) {
+    ctx.fillStyle = '#ffd54f';
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#c79100';
+    ctx.lineWidth = big ? 2.6 : 2;
+    ctx.stroke();
+    if (big) {
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.arc(x, y, r * 0.72, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.fillStyle = '#b07d00';
+      ctx.font = `bold ${Math.round(r * 0.95)}px system-ui, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('10', x, y + 0.5);
+      ctx.textBaseline = 'alphabetic';
+      // a slow glint so big coins catch the eye
+      const g = (t * 0.8 + x * 0.01) % 1;
+      if (g < 0.25) {
+        ctx.fillStyle = `rgba(255,255,255,${0.8 * (1 - g / 0.25)})`;
+        ctx.beginPath();
+        ctx.arc(x - r * 0.35, y - r * 0.35, r * 0.22, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+  }
+
+  /**
+   * A floating sea mine: dark ball, eight spikes, blinking red light.
+   * @param {number} x
+   * @param {number} y
+   * @param {number} t display game time, s
+   */
+  function drawMine(x, y, t) {
+    const r = CONFIG.MINE_RADIUS * 0.68;
+    const bob = Math.sin(t * 2 + x * 0.05) * 1.2;
+    const cy = y + bob;
+    ctx.fillStyle = '#263238';
+    ctx.beginPath();
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2;
+      const c = Math.cos(a);
+      const s = Math.sin(a);
+      ctx.moveTo(x + c * r * 0.7 - s * 2, cy + s * r * 0.7 + c * 2);
+      ctx.lineTo(x + c * CONFIG.MINE_RADIUS, cy + s * CONFIG.MINE_RADIUS);
+      ctx.lineTo(x + c * r * 0.7 + s * 2, cy + s * r * 0.7 - c * 2);
+      ctx.closePath();
+    }
+    ctx.moveTo(x + r, cy);
+    ctx.arc(x, cy, r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#546e7a'; // highlight
+    ctx.beginPath();
+    ctx.arc(x - r * 0.35, cy - r * 0.35, r * 0.3, 0, Math.PI * 2);
+    ctx.fill();
+    const on = Math.sin(t * 7 + x) > 0;
+    ctx.fillStyle = on ? '#ff1744' : '#7f0000';
+    ctx.beginPath();
+    ctx.arc(x, cy, r * 0.28, 0, Math.PI * 2);
+    ctx.fill();
+  }
 
   /**
    * Fart puffs from Dan's backside, drawn behind the sprite.
@@ -228,22 +301,22 @@ export function createRenderer(canvas) {
       drawCloud(ctx, x, y, c.w, c.h, c.seed);
     }
 
-    // Coins
-    const r = CONFIG.COIN_RADIUS;
+    // Coins, big coins and mines
+    const reach = CONFIG.COIN_BIG_RADIUS + 20;
     for (const k of world.coins) {
       if (!k.active) continue;
-      if (k.x < view.x0 - r || k.x > view.x1 + r || k.y < view.y0 - r || k.y > view.y1 + r) continue;
-      ctx.fillStyle = '#ffd54f';
-      ctx.beginPath();
-      ctx.arc(k.x, k.y, r, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = '#c79100';
-      ctx.lineWidth = 2;
-      ctx.stroke();
+      if (k.x < view.x0 - reach || k.x > view.x1 + reach || k.y < view.y0 - reach || k.y > view.y1 + reach) continue;
+      if (k.kind === COIN_KIND.MINE) {
+        drawMine(k.x, k.y, t);
+        continue;
+      }
+      const r = k.kind === COIN_KIND.BIG ? CONFIG.COIN_BIG_RADIUS : CONFIG.COIN_RADIUS;
+      drawCoin(k.x, k.y, r, k.kind === COIN_KIND.BIG, t);
       const age = t - k.t0;
       if (age < CONFIG.COIN_SPARKLE_S) {
         const p = age / CONFIG.COIN_SPARKLE_S;
         ctx.strokeStyle = `rgba(255,255,255,${1 - p})`;
+        ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.arc(k.x, k.y, r + 4 + p * 16, 0, Math.PI * 2);
         ctx.stroke();
@@ -254,16 +327,21 @@ export function createRenderer(canvas) {
     // DAN_W × DAN_H collider: the soles of both shoes sit exactly on y.
     if (dan.vx > 5) facing = 1;
     else if (dan.vx < -5) facing = -1;
-    // Ground impact: red splat pool behind Dan, squashed Dan, droplets in front.
+    // Death: a mine blows Dan up in mid-air (he isn't drawn); hitting the
+    // ground splats him (red pool behind, squashed Dan, droplets in front).
     const seed = splatSeed(dan.x);
-    if (splat >= 0) drawSplatPool(ctx, dan.x, dan.y, splatTime(splat), seed);
-    if (danArtReady()) {
+    const exploded = splat >= 0 && run.exploded;
+    if (exploded) drawExplosion(ctx, dan.x, dan.y - CONFIG.DAN_H / 2, splatTime(splat), seed);
+    else if (splat >= 0) drawSplatPool(ctx, dan.x, dan.y, splatTime(splat), seed);
+    if (exploded) {
+      // nothing left of Dan
+    } else if (danArtReady()) {
       if (dan.boosting && splat < 0) drawPuffs(dan.x, dan.y, t);
       poseFor(splat >= 0 ? 0 : dan.vy, t, pose);
       drawDanSprite(ctx, dan.x, dan.y, facing, pose, splat >= 0 ? Math.min(1, splatTime(splat) / 0.06) : 0);
     } else if (splat >= 0) drawSplat(dan.x, dan.y, splat);
     else drawDan(dan.x, dan.y, dan.vy, dan.boosting, t);
-    if (splat >= 0) drawSplatDrops(ctx, dan.x, dan.y, splatTime(splat), seed);
+    if (splat >= 0 && !exploded) drawSplatDrops(ctx, dan.x, dan.y, splatTime(splat), seed);
 
     // Coin pickup sparkles, in front of Dan.
     drawPickupSparkles(ctx, world.pickups, t);

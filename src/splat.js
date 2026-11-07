@@ -151,3 +151,94 @@ export const splatSeed = (x) => (Math.floor(x * 7.31) ^ 0x5b1a7) >>> 0;
  * @returns {number}
  */
 export const splatTime = (p) => p * CONFIG.SPLAT_S;
+
+const EXPLODE_DROPS = 30;
+const SMOKE_PUFFS = 7;
+
+/**
+ * Mid-air explosion when Dan touches a mine: a bright flash, grey smoke puffs
+ * drifting out, a red goo burst that bursts open then breaks up, and goo
+ * droplets flying in every direction and falling. Dan isn't drawn.
+ * Pure function of (seed, time since the blast).
+ * @param {CanvasRenderingContext2D} ctx world transform applied
+ * @param {number} x blast centre
+ * @param {number} y blast centre
+ * @param {number} tt seconds since the blast
+ * @param {number} seed
+ */
+export function drawExplosion(ctx, x, y, tt, seed) {
+  // Smoke (behind everything else).
+  for (let i = 0; i < SMOKE_PUFFS; i++) {
+    const a = (i / SMOKE_PUFFS) * Math.PI * 2 + rand(seed, 300 + i);
+    const out = easeOut(tt / 0.6) * (14 + rand(seed, 310 + i) * 12);
+    const fade = Math.max(0, 1 - tt / 1.0);
+    if (fade <= 0) break;
+    ctx.globalAlpha = fade * 0.55;
+    ctx.fillStyle = i % 2 ? '#8a8a8a' : '#b0b0b0';
+    ctx.beginPath();
+    ctx.arc(x + Math.cos(a) * out, y + Math.sin(a) * out - tt * 10, 7 + tt * 12, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
+  // Goo burst: a spiky red star that pops open, then shrinks away as it breaks up.
+  const grow = easeOut(tt / 0.12);
+  const shrink = tt < 0.3 ? 1 : Math.max(0, 1 - (tt - 0.3) / 0.45);
+  const s = grow * shrink;
+  if (s > 0.02) {
+    for (const [color, grow2] of [[RIM, 1.4], [RED, 0]]) {
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.moveTo(x + 9 * s + grow2, y);
+      ctx.arc(x, y, 9 * s + grow2, 0, Math.PI * 2);
+      for (let i = 0; i < 10; i++) {
+        const a = (i / 10) * Math.PI * 2 + rand(seed, 200 + i) * 0.4;
+        const len = (16 + rand(seed, 220 + i) * 14) * s;
+        const w = 3.2 * s + grow2;
+        const nx = -Math.sin(a) * w;
+        const ny = Math.cos(a) * w;
+        const tx = x + Math.cos(a) * len;
+        const ty = y + Math.sin(a) * len;
+        ctx.moveTo(x + nx, y + ny);
+        ctx.lineTo(tx, ty);
+        ctx.lineTo(x - nx, y - ny);
+        ctx.closePath();
+        ctx.moveTo(tx + w, ty);
+        ctx.arc(tx, ty, w, 0, Math.PI * 2);
+      }
+      ctx.fill();
+    }
+  }
+
+  // Droplets in every direction, under gravity.
+  for (let i = 0; i < EXPLODE_DROPS; i++) {
+    const a = (i / EXPLODE_DROPS) * Math.PI * 2 + (rand(seed, 240 + i) - 0.5) * 0.5;
+    const sp = 90 + rand(seed, 260 + i) * 200;
+    const r = 1 + rand(seed, 280 + i) * 1.8;
+    const px = x + Math.cos(a) * sp * tt;
+    const py = y + Math.sin(a) * sp * tt + 0.5 * DROP_GRAVITY * tt * tt;
+    ctx.fillStyle = RIM;
+    ctx.beginPath();
+    ctx.arc(px, py, r + 0.7, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = RED;
+    ctx.beginPath();
+    ctx.arc(px, py, r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Flash on top, very brief.
+  if (tt < 0.16) {
+    const p = tt / 0.16;
+    ctx.globalAlpha = 1 - p;
+    ctx.fillStyle = '#fff3b0';
+    ctx.beginPath();
+    ctx.arc(x, y, 10 + p * 30, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#ffb300';
+    ctx.beginPath();
+    ctx.arc(x, y, 6 + p * 16, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+}

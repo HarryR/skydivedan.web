@@ -109,6 +109,13 @@ export const CONFIG = {
   COIN_RHO_HIGH: 1,
   COIN_MIN_DIST: 90, // never spawn on top of Dan
   COIN_SPARKLE_S: 0.35,
+  // Coin variety: each spawn is a big coin or a mine with these chances.
+  COIN_BIG_CHANCE: 0.06,
+  COIN_BIG_VALUE: 10,
+  COIN_BIG_RADIUS: 17,
+  MINE_CHANCE: 0.06,
+  MINE_RADIUS: 13, // drawn size (body + spikes)
+  MINE_HIT_RADIUS: 9, // a bit forgiving: spike tips don't count
   PICKUP_FX_S: 0.55, // coin pickup sparkle burst duration
   PICKUP_FX_POOL: 8, // concurrent pickup bursts (ring buffer)
 

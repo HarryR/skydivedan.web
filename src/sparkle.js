@@ -1,5 +1,6 @@
 // Coin pickup sparkle: a burst of twinkling four-point stars (gold and white)
-// flying outward and fading, a quick expanding ring, and a "+1" floating up.
+// flying outward and fading, a quick expanding ring, and a "+N" floating up
+// (bigger burst and text for big coins).
 // Driven by world.pickups (ring buffer filled by the simulation); a pure
 // function of (slot, age), so nothing is allocated per frame.
 import { CONFIG } from './config.js';
@@ -47,7 +48,7 @@ export function drawPickupSparkles(ctx, pickups, t) {
     const age = t - pk.t;
     if (!(age >= 0 && age < dur)) continue;
     const p = age / dur;
-    const out = easeOut(p);
+    const out = easeOut(p) * (pk.value > 1 ? 1.6 : 1); // big coins: bigger burst
     const fade = 1 - p * p;
     // Per-burst seed so consecutive pickups don't look identical.
     const seed = (Math.floor(pk.t * 1000) * 2654435761 + i) >>> 0;
@@ -78,14 +79,15 @@ export function drawPickupSparkles(ctx, pickups, t) {
 
     // "+1" floating up.
     ctx.globalAlpha = fade;
-    ctx.font = 'bold 11px system-ui, sans-serif';
+    ctx.font = pk.value > 1 ? 'bold 16px system-ui, sans-serif' : 'bold 11px system-ui, sans-serif';
     ctx.textAlign = 'center';
     ctx.lineWidth = 2.5;
     ctx.strokeStyle = '#6b3d00';
     const ty = pk.y - 10 - out * 16;
-    ctx.strokeText('+1', pk.x, ty);
+    const label = pk.value === 1 ? '+1' : `+${pk.value}`;
+    ctx.strokeText(label, pk.x, ty);
     ctx.fillStyle = GOLD;
-    ctx.fillText('+1', pk.x, ty);
+    ctx.fillText(label, pk.x, ty);
   }
   ctx.globalAlpha = 1;
 }

@@ -1,7 +1,19 @@
 // Fixed-step player physics, cloud landing, coin pickup, fart boost, ground.
 // Step order follows SIMULATION_DESIGN.md "One simulation step".
 import { CONFIG, lerp, clamp, altFrac } from './config.js';
-import { createWorld, resetWorld, updateClouds, updateCoins, cloudX, bandTop, bandBottom, recordPickup, coinCollected } from './world.js';
+import {
+  createWorld,
+  resetWorld,
+  updateClouds,
+  updateCoins,
+  cloudX,
+  bandTop,
+  bandBottom,
+  recordPickup,
+  coinCollected,
+  pickupRadius,
+  COIN_KIND,
+} from './world.js';
 
 /** @typedef {import('./world.js').World} World */
 /** @typedef {import('./world.js').Camera} Camera */
@@ -30,6 +42,7 @@ import { createWorld, resetWorld, updateClouds, updateCoins, cloudX, bandTop, ba
  * @property {World} world
  * @property {number} balance coins = score = fart fuel (fractional while draining; display floors it)
  * @property {boolean} landed hit the ground during the last step
+ * @property {boolean} exploded touched a mine during the last step (run ends)
  * @property {number} candidates debug: clouds that passed the cheap reject last step
  */
 
@@ -41,6 +54,7 @@ export function createRun() {
     world: createWorld(),
     balance: 0,
     landed: false,
+    exploded: false,
     candidates: 0,
   };
 }
@@ -64,6 +78,7 @@ export function resetRun(run, seed) {
   run.cam.y = d.y + CONFIG.CAMERA_LEAD_Y;
   run.balance = 0;
   run.landed = false;
+  run.exploded = false;
   resetWorld(run.world, seed, run.cam, d);
 }
 
@@ -180,21 +195,29 @@ export function simulateStep(run, input, dt, t) {
     d.landedAt = t1;
   }
 
-  // 7. Coins: Dan's swept AABB, expanded by the coin radius, vs coin centre.
-  const r = CONFIG.COIN_RADIUS;
-  const bx0 = Math.min(d.prevX, d.x) - halfW - r;
-  const bx1 = Math.max(d.prevX, d.x) + halfW + r;
-  const by0 = Math.min(d.prevY, d.y) - CONFIG.DAN_H - r;
-  const by1 = Math.max(d.prevY, d.y) + r;
+  // 7. Pickups: Dan's swept AABB, expanded by each pickup's radius, vs its
+  // centre. Coins add to the balance (big ones 10x); a mine blows Dan up.
+  const sx0 = Math.min(d.prevX, d.x) - halfW;
+  const sx1 = Math.max(d.prevX, d.x) + halfW;
+  const sy0 = Math.min(d.prevY, d.y) - CONFIG.DAN_H;
+  const sy1 = Math.max(d.prevY, d.y);
+  run.exploded = false;
   for (const k of world.coins) {
     if (!k.active) continue;
-    if (k.x > bx0 && k.x < bx1 && k.y > by0 && k.y < by1) {
-      k.active = false;
-      world.coinCount--;
-      run.balance += 1;
-      recordPickup(world, k.x, k.y, t1);
-      coinCollected(world);
+    const r = pickupRadius(k.kind);
+    if (!(k.x > sx0 - r && k.x < sx1 + r && k.y > sy0 - r && k.y < sy1 + r)) continue;
+    k.active = false;
+    world.coinCount--;
+    if (k.kind === COIN_KIND.MINE) {
+      run.exploded = true;
+      d.vx = 0;
+      d.vy = 0;
+      break;
     }
+    const value = k.kind === COIN_KIND.BIG ? CONFIG.COIN_BIG_VALUE : 1;
+    run.balance += value;
+    recordPickup(world, k.x, k.y, t1, value);
+    coinCollected(world);
   }
   updateCoins(world, t1, dt, run.cam, d, CONFIG.GROUND_Y - d.y);
 

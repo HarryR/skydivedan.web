@@ -47,7 +47,22 @@ import { CONFIG, lerp, altFrac } from './config.js';
  * @property {number} x centre
  * @property {number} y centre
  * @property {number} t0 game time of spawn, s (drives the sparkle)
+ * @property {number} kind COIN_KIND: normal coin, big coin, or mine
  */
+
+/** Pickup kinds sharing the coin pool, spawner and density rules. */
+export const COIN_KIND = Object.freeze({ COIN: 0, BIG: 1, MINE: 2 });
+
+/**
+ * Collision radius for a pickup kind.
+ * @param {number} kind
+ * @returns {number}
+ */
+export function pickupRadius(kind) {
+  if (kind === COIN_KIND.BIG) return CONFIG.COIN_BIG_RADIUS;
+  if (kind === COIN_KIND.MINE) return CONFIG.MINE_HIT_RADIUS;
+  return CONFIG.COIN_RADIUS;
+}
 
 /**
  * A recent coin pickup, for the sparkle burst (render-only; ring buffer).
@@ -55,6 +70,7 @@ import { CONFIG, lerp, altFrac } from './config.js';
  * @property {number} x coin centre
  * @property {number} y coin centre
  * @property {number} t game time of pickup, s (-Infinity = unused)
+ * @property {number} value coins gained (1 or COIN_BIG_VALUE), for the "+N" text
  */
 
 /**
@@ -151,7 +167,7 @@ export function createWorld() {
   /** @type {Coin[]} */
   const coins = [];
   for (let i = 0; i < CONFIG.COIN_POOL; i++) {
-    coins.push({ active: false, x: 0, y: 0, t0: 0 });
+    coins.push({ active: false, x: 0, y: 0, t0: 0, kind: 0 });
   }
   return {
     clouds,
@@ -162,7 +178,7 @@ export function createWorld() {
     coinHazard: 0,
     coinThreshold: 1,
     coinDebt: 0,
-    pickups: Array.from({ length: CONFIG.PICKUP_FX_POOL }, () => ({ x: 0, y: 0, t: -Infinity })),
+    pickups: Array.from({ length: CONFIG.PICKUP_FX_POOL }, () => ({ x: 0, y: 0, t: -Infinity, value: 1 })),
     pickupNext: 0,
     view: { x0: 0, y0: 0, x1: 0, y1: 0 },
     win: { x0: 0, y0: 0, x1: 0, y1: 0 },
@@ -366,12 +382,14 @@ export function updateClouds(world, t, cam, danX, alt) {
  * @param {number} x
  * @param {number} y
  * @param {number} t game time, s
+ * @param {number} value coins gained
  */
-export function recordPickup(world, x, y, t) {
+export function recordPickup(world, x, y, t, value) {
   const p = world.pickups[world.pickupNext];
   p.x = x;
   p.y = y;
   p.t = t;
+  p.value = value;
   world.pickupNext = (world.pickupNext + 1) % world.pickups.length;
 }
 
@@ -415,6 +433,13 @@ function spawnCoin(world, t, dan, offscreenOnly) {
     slot.x = x;
     slot.y = y;
     slot.t0 = t;
+    const roll = rng();
+    slot.kind =
+      roll < CONFIG.MINE_CHANCE
+        ? COIN_KIND.MINE
+        : roll < CONFIG.MINE_CHANCE + CONFIG.COIN_BIG_CHANCE
+          ? COIN_KIND.BIG
+          : COIN_KIND.COIN;
     world.coinCount++;
     return true;
   }
