@@ -115,6 +115,22 @@ export function createRenderer(canvas) {
     const r = CONFIG.MINE_RADIUS * 0.68;
     const bob = Math.sin(t * 2 + x * 0.05) * 1.2;
     const cy = y + bob;
+
+    // Radar ping: red rings expanding from the mine and fading, two staggered
+    // per period, each mine on its own phase.
+    const period = CONFIG.MINE_PING_S;
+    const phase = (t / period + x * 0.013) % 1;
+    ctx.strokeStyle = '#ff1744';
+    for (let i = 0; i < 2; i++) {
+      const p = (phase + i * 0.5) % 1;
+      const ease = 1 - (1 - p) * (1 - p);
+      ctx.globalAlpha = (1 - p) * 0.75;
+      ctx.lineWidth = 2.2 - p * 1.4;
+      ctx.beginPath();
+      ctx.arc(x, cy, CONFIG.MINE_RADIUS * (0.9 + ease * CONFIG.MINE_PING_REACH), 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
     ctx.fillStyle = '#263238';
     ctx.beginPath();
     for (let i = 0; i < 8; i++) {
@@ -133,7 +149,8 @@ export function createRenderer(canvas) {
     ctx.beginPath();
     ctx.arc(x - r * 0.35, cy - r * 0.35, r * 0.3, 0, Math.PI * 2);
     ctx.fill();
-    const on = Math.sin(t * 7 + x) > 0;
+    // Light flashes as each ring leaves the mine.
+    const on = (phase % 0.5) < 0.12;
     ctx.fillStyle = on ? '#ff1744' : '#7f0000';
     ctx.beginPath();
     ctx.arc(x, cy, r * 0.28, 0, Math.PI * 2);

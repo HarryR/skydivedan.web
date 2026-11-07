@@ -131,6 +131,8 @@ export const CONFIG = {
   MINE_CHANCE: 0.06,
   MINE_RADIUS: 13, // drawn size (body + spikes)
   MINE_HIT_RADIUS: 9, // a bit forgiving: spike tips don't count
+  MINE_PING_S: 1.2, // radar ring period (two rings per period)
+  MINE_PING_REACH: 2.2, // ring grows to (0.9 + this) x MINE_RADIUS
   // Pickups (coins, big coins, mines) expire after a random lifetime so the
   // field keeps shifting; they blink before vanishing, then refill off-screen.
   COIN_LIFE_MIN: 10,
