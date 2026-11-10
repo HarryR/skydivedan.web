@@ -1,5 +1,6 @@
 # Deploy the static site to GitHub Pages on every push to main.
-# No build step: the repo root is served as-is (native ES modules, relative paths).
+# tools/build.sh bundles + minifies src/ into _site/game.js with a standalone
+# esbuild binary (no npm); locally the unbundled modules are served as-is.
 name: Deploy to GitHub Pages
 
 on:
@@ -26,14 +27,18 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      # Publish only what the game needs: no docs, editor config, or the
-      # full-resolution source art in assets/originals/ (never loaded).
-      - name: Assemble site
+      # Pinned standalone esbuild binary, fetched straight from the registry tarball.
+      - name: Install esbuild
         run: |
-          mkdir -p _site
-          cp index.html styles.css _site/
-          cp -r src _site/
-          if [ -d assets ]; then cp -r assets _site/ && rm -rf _site/assets/originals; fi
+          mkdir -p "$RUNNER_TEMP/esbuild"
+          curl -fsSL https://registry.npmjs.org/@esbuild/linux-x64/-/linux-x64-0.20.1.tgz \
+            | tar -xz -C "$RUNNER_TEMP/esbuild" --strip-components=2 package/bin/esbuild
+          echo "$RUNNER_TEMP/esbuild" >> "$GITHUB_PATH"
+
+      # Publish only what the game needs (see tools/build.sh): the bundled JS,
+      # no docs, editor config, or full-resolution art in assets/originals/.
+      - name: Build site
+        run: tools/build.sh
 
       # Requires Settings → Pages → Source: "GitHub Actions" (one-time setup).
       - uses: actions/configure-pages@v6

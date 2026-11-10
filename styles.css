@@ -225,6 +225,21 @@ body {
   width: min(100%, 19em);
 }
 
+/* Intro logo drifts gently, like it's floating on the air. In em so the bob
+   scales with the stage. Off for users who ask for reduced motion. */
+#title-logo {
+  animation: logo-float 3.2s ease-in-out infinite;
+}
+
+@keyframes logo-float {
+  0%, 100% { transform: translateY(0) rotate(-1.5deg); }
+  50%      { transform: translateY(-0.5em) rotate(1.5deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #title-logo { animation: none; }
+}
+
 /* Text fallback, shown only if the logo image fails to load. */
 .title-wrap .title {
   display: block;
@@ -294,33 +309,62 @@ h2 {
   opacity: 0.9;
 }
 
+/* Big buttons match the title logo: banded yellow face (cream highlight,
+   yellow, orange underside), red-orange outline inside a navy rim, a hard navy
+   drop shadow and slanted heavy lettering. Colours are sampled from the logo.
+   Pressing sinks the button into its shadow. */
 .big-btn {
+  --btn-hi: #fbe9a0;
+  --btn-face: #fbc702;
+  --btn-lo: #f7a906;
   margin-top: 0.4em;
-  padding: 0.7em 1.6em;
-  border: 0;
-  border-radius: 999px;
-  background: #ffd54f;
-  color: #3e2723;
+  padding: 0.6em 1.6em;
+  border: 0.15em solid #df1801;
+  border-radius: 0.7em;
+  background: linear-gradient(var(--btn-hi) 0 40%, var(--btn-face) 40% 78%, var(--btn-lo) 78%);
+  box-shadow: 0 0 0 0.12em #07053c, 0.2em 0.28em 0 0.12em #07053c;
+  color: #600e23;
   font-size: 1.25em;
-  font-weight: 800;
+  font-weight: 900;
+  font-style: italic;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  text-shadow: 0 0.06em 0 #fcfbc3;
+  transform: skewX(-6deg);
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 
+.big-btn:active {
+  box-shadow: 0 0 0 0.12em #07053c, 0.05em 0.08em 0 0.12em #07053c;
+  transform: skewX(-6deg) translate(0.15em, 0.2em);
+}
+
+.big-btn:focus-visible {
+  outline: 0.15em solid #fff;
+  outline-offset: 0.35em;
+}
+
+/* Less prominent action (e.g. Restart): same shape, pale cream face. */
 .big-btn.secondary {
-  background: #fff;
+  --btn-hi: #fcfbc3;
+  --btn-face: #fbe9a0;
+  --btn-lo: #f1a060;
 }
 
 .toggles {
   margin-top: 0.5em;
 }
 
+/* Small toggles: outlined in the logo's yellow with its hard navy shadow. */
 .lang-btn {
   margin-top: 0.5em;
   padding: 0.4em 0.9em;
-  border: 0.125em solid #fff8;
-  border-radius: 999px;
+  border: 0.125em solid #fbc702;
+  border-radius: 0.6em;
   background: transparent;
-  color: #fff8;
+  box-shadow: 0.12em 0.16em 0 #07053c;
+  color: #fbe9a0aa;
   font-size: 0.95em;
   cursor: pointer;
 }
@@ -337,16 +381,17 @@ h2 {
 
 .sound-btn {
   padding: 0.25em 0.6em;
-  border: 0.125em solid #fff8;
-  border-radius: 999px;
+  border: 0.125em solid #fbc702;
+  border-radius: 0.6em;
   background: transparent;
+  box-shadow: 0.12em 0.16em 0 #07053c;
   font-size: 0.95em;
   line-height: 1.2;
   cursor: pointer;
 }
 
 .lang-btn .active {
-  color: #fff;
+  color: #fbc702;
   font-weight: 800;
 }
 
@@ -373,7 +418,7 @@ h2 {
     bottom 0.18s;
 }
 
-.qr-btn canvas {
+.qr-btn img {
   display: block;
   width: 100%;
   height: 100%;

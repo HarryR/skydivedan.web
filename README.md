@@ -7,7 +7,7 @@ Dan jumps out of a plane, pulls the cord, and his backpack launches his lunch in
 <p align="center">
   <a href="https://harryr.github.io/skydivedan.web/"><img src="docs/start-screen.png" alt="Sky Dive Dan start screen: logo, Begin Game button, language and sound toggles, and controls for computer and mobile. Click to play." width="480"></a>
   &nbsp;
-  <a href="https://harryr.github.io/skydivedan.web/"><img src="docs/play-qr.png" alt="QR code linking to https://harryr.github.io/skydivedan.web/" width="160"></a>
+  <a href="https://harryr.github.io/skydivedan.web/"><img src="assets/share-qr-v01-296.png" alt="QR code linking to https://harryr.github.io/skydivedan.web/" width="160"></a>
 </p>
 <p align="center">Click either image to play, or scan the QR code with your phone.</p>
 
@@ -32,7 +32,7 @@ On the start, pause and game-over screens, the QR code in the corner links to th
 
 ## Running locally
 
-The game is plain JavaScript ES modules with no build step and no dependencies to install. Serve the folder with any static file server, for example:
+The game is plain JavaScript ES modules, with no build step during development and no dependencies to install. Serve the folder with any static file server, for example:
 
 ```sh
 python3 -m http.server
@@ -41,6 +41,17 @@ python3 -m http.server
 Then open <http://localhost:8000>. Add `?debug` to the URL, or press the backtick key in game, to show hitboxes, the simulation window and entity counts.
 
 If a reload looks broken after you pull changes, do a hard refresh (Ctrl+Shift+R). Browsers can cache a mix of old and new module files.
+
+### Previewing the deployed build
+
+The deployed site bundles and minifies `src/` into a single `game.js`, and inlines the minified `styles.css` into `index.html`, with [esbuild](https://esbuild.github.io/). It's a standalone binary, so no npm is needed: install it from your distro or download it from the esbuild site. To preview exactly what gets deployed:
+
+```sh
+tools/build.sh              # writes _site/; add --sourcemap to debug the bundle
+python3 -m http.server -d _site
+```
+
+To try it on a phone on the same network, add `--bind 0.0.0.0` and open `http://<your-PC's-IP>:8000`.
 
 ## How it's built
 
@@ -58,12 +69,6 @@ If a reload looks broken after you pull changes, do a hard refresh (Ctrl+Shift+R
 | `src/input.js`, `src/ui.js`, `src/i18n.js`, `src/audio.js`, `src/qr.js` | Controls, menus, translations, sound, share QR |
 | `src/config.js` | Every tuning value: physics, spawn rates, sizes, colours |
 | `tools/crunch.py` | Turns full-size art into small crunched PNGs (Python + Pillow, optional pngcrush) |
-
-The design notes are in [GAME_PLAN.md](GAME_PLAN.md), [SIMULATION_DESIGN.md](SIMULATION_DESIGN.md), [TECHNICAL_IMPLEMENTATION_GUIDE.md](TECHNICAL_IMPLEMENTATION_GUIDE.md) and [art.md](art.md).
+| `tools/build.sh` | Builds the deployed site into `_site/`: bundled, minified JS and inlined CSS (esbuild) |
 
 The site deploys to GitHub Pages automatically on every push to `main` ([workflow](.github/workflows/pages.yml)).
-
-## Credits
-
-- Game by [HarryR](https://github.com/HarryR).
-- The QR codes use [qrcode-generator](https://github.com/kazuhikoarase/qrcode-generator) by Kazuhiko Arase (MIT), vendored in `src/vendor/`. QR Code is a registered trademark of DENSO WAVE INCORPORATED.

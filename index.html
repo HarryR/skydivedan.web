@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
     <title>Sky Dive Dan</title>
     <link rel="stylesheet" href="./styles.css" />
+    <link rel="apple-touch-icon" href="./assets/app-icon-v01-128.png" />
+    <link rel="icon" type="image/png" href="./assets/app-icon-v01-128.png" />
+    <!-- Dan's sprites are requested by src/danart.js only once the JS has run;
+         start fetching them now. Logos are <img> tags, already fetched early. -->
+    <link rel="preload" as="image" href="./assets/dan-body-v01-49.png" />
+    <link rel="preload" as="image" href="./assets/dan-arm-v01-52.png" />
+    <link rel="preload" as="image" href="./assets/dan-leg-v01-24.png" />
   </head>
   <body>
     <div id="stage">
@@ -78,8 +85,9 @@
         <div class="toggles"><button class="lang-btn"><span class="lang-vn">VN</span> / <span class="lang-en">EN</span></button><button class="sound-btn" data-i18n-aria="sound" aria-label="Sound on/off">🔊</button></div>
       </section>
 
-      <!-- Share QR (start, pause, game-over screens): tap to enlarge, tap again to shrink. -->
-      <button id="qr-btn" class="qr-btn" data-i18n-aria="share" aria-label="Show QR code to share" aria-expanded="false"></button>
+      <!-- Share QR (start, pause, game-over screens): tap to enlarge, tap again to shrink.
+           A fixed image of the public URL, https://harryr.github.io/skydivedan.web/ -->
+      <button id="qr-btn" class="qr-btn" data-i18n-aria="share" aria-label="Show QR code to share" aria-expanded="false" title="https://harryr.github.io/skydivedan.web/"><img draggable="false" src="./assets/share-qr-v01-296.png" alt="" /></button>
     </div>
     <script type="module" src="./src/main.js"></script>
   </body>

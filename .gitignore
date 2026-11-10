@@ -1,3 +1,6 @@
 # Full-resolution generated source art: large, local only. The game ships
-# crunched copies from assets/ (see art.md "Source vs shipped assets").
+# crunched copies from assets/ (made with tools/crunch.py).
 assets/originals/
+
+# Built site from tools/build.sh (deploy preview).
+_site/
